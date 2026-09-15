@@ -1759,14 +1759,18 @@ function driveProgramar(){
   _driveTimer=setTimeout(()=>{_driveTimer=null;driveSyncAhora(S);},4000);
 }
 
-async function _drivePost(body){
-  const r=await fetch(DRIVE_URL,{method:'POST',redirect:'follow',body:JSON.stringify(Object.assign({secreto:DRIVE_SECRET},body))});
-  return r.json();
+// Drive suele tardar 5-10 s; pasado el límite se corta para no dejar "Consultando…" colgado
+async function _driveFetch(url,opts,seg){
+  const ctl=new AbortController(), tm=setTimeout(()=>ctl.abort(),(seg||40)*1000);
+  try{const r=await fetch(url,Object.assign({redirect:'follow',signal:ctl.signal},opts));return await r.json();}
+  finally{clearTimeout(tm);}
 }
-async function _driveGet(params){
+function _drivePost(body){
+  return _driveFetch(DRIVE_URL,{method:'POST',body:JSON.stringify(Object.assign({secreto:DRIVE_SECRET},body))},60);
+}
+function _driveGet(params){
   const q=new URLSearchParams(Object.assign({secreto:DRIVE_SECRET},params)).toString();
-  const r=await fetch(DRIVE_URL+'?'+q,{redirect:'follow'});
-  return r.json();
+  return _driveFetch(DRIVE_URL+'?'+q,{},40);
 }
 
 async function driveSyncAhora(o,hito){
@@ -1792,10 +1796,11 @@ window.addEventListener('pagehide',()=>{
 async function cargarDriveEnModal(){
   const box=document.getElementById('obrasDrive');
   if(!DRIVE_URL){box.innerHTML=`<div class="obras-sec-t">☁ Google Drive</div><div class="obras-vacio">Respaldo en Drive todavía no conectado.</div>`;return;}
-  box.innerHTML=`<div class="obras-sec-t">☁ En Google Drive</div><div class="obras-vacio">Consultando…</div>`;
+  box.innerHTML=`<div class="obras-sec-t">☁ En Google Drive</div><div class="obras-vacio">Consultando Drive… (tarda unos segundos)</div>`;
   let j;
   try{j=await _driveGet({action:'list'});}catch(e){j=null;}
-  if(!j||!j.ok){box.innerHTML=`<div class="obras-sec-t">☁ En Google Drive</div><div class="obras-vacio">No se pudo conectar con Drive.</div>`;return;}
+  if(!j||!j.ok){box.innerHTML=`<div class="obras-sec-t">☁ En Google Drive</div><div class="obras-vacio">No se pudo conectar con Drive. Revisá la conexión y volvé a abrir 🏗 Obras.</div>`;return;}
+  _driveObras=j.obras||[];
   const filas=(j.obras||[]).map(r=>{
     const loc=DB.obras[r.id];
     let estado,btn='';
@@ -1824,13 +1829,23 @@ async function traerDeDrive(id){
   toast('✅ '+nombreObra(o)+' traída de Drive');
 }
 
+let _driveObras=null;
 async function verVersiones(id){
   const box=document.getElementById('obrasVers');
   const o=DB.obras[id];
-  box.innerHTML=`<div class="obras-sec-t">🕘 Versiones de ${nombreObra(o)}</div><div class="obras-vacio">Consultando…</div>`;
+  const titulo=`<div class="obras-sec-t">🕘 Versiones de ${nombreObra(o)}</div>`;
+  if(_driveObras&&!_driveObras.some(r=>r.id===id)){
+    box.innerHTML=titulo+`<div class="obras-vacio">Esta obra todavía no se subió a Drive, así que no tiene historial. Se sube sola al cargarle datos, o tocando 💾 Guardar.</div>`;
+    return;
+  }
+  box.innerHTML=titulo+`<div class="obras-vacio">Consultando Drive… (tarda unos segundos)</div>`;
   let j;
   try{j=await _driveGet({action:'versiones',obraId:id});}catch(e){j=null;}
-  if(!j||!j.ok){box.innerHTML+=`<div class="obras-vacio">No se pudo leer el historial.</div>`;return;}
+  if(j&&!j.ok&&/no encontrada/i.test(j.error||'')){
+    box.innerHTML=titulo+`<div class="obras-vacio">Esta obra todavía no se subió a Drive, así que no tiene historial. Se sube sola al cargarle datos, o tocando 💾 Guardar.</div>`;
+    return;
+  }
+  if(!j||!j.ok){box.innerHTML=titulo+`<div class="obras-vacio">No se pudo leer el historial. Revisá la conexión y probá de nuevo.</div>`;return;}
   const filas=(j.versiones||[]).map(v=>`<div class="obra-item">
       <div class="obra-info"><div class="obra-nom">${_fechaCorta(v.fecha)}${v.hito?' · <span class="vers-hito">guardado manual</span>':''}</div>
       <div class="obra-meta">${v.certs!=null?v.certs+' certificados · último: '+(v.ultimo||'—'):v.archivo}</div></div>
