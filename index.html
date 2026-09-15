@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ObraCertif</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sal:#f5dac8; --sal-h:#a0522d; --sal-r:#c4784a;
+  --cel:#c8ddf5; --cel-h:#1a3f6e; --cel-r:#4a7aab;
+  --mo-g:#d4e8d0; --mo-gh:#2d6a2d; --mo-gr:#4a8a4a;
+  --mo-f:#d0e4f0; --mo-fh:#1a4a6e; --mo-fr:#3a6a9a;
+  --yel:#ffe566; --yel-d:#7a5200; --yel-b:#ffd000;
+  --grn:#d4edda; --grn-d:#155724;
+  --ros:#f8d7da; --ros-d:#721c24;
+  --gry:#e9ecef; --gry-d:#6c757d;
+  --hdr:#111827; --hdr2:#1e2d42;
+  --acc:#e8a020;
+  --ink:#1a1a2e; --brd:#ced4da;
+  --red:#dc3545;
+  --sans:'IBM Plex Sans',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px;background:#e2e8f0}
+body{font-family:var(--sans);color:var(--ink)}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--hdr);color:#fff;
+  display:flex;align-items:center;gap:10px;
+  padding:0 14px;height:48px;
+  position:sticky;top:0;z-index:300;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.brand{font-family:var(--mono);font-weight:600;font-size:15px;color:var(--acc)}
+.sep{width:1px;height:28px;background:rgba(255,255,255,.15)}
+.tacts{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px 11px;border-radius:4px;border:none;cursor:pointer;
+  font-family:var(--sans);font-size:11px;font-weight:600;
+  letter-spacing:.02em;transition:filter .13s;white-space:nowrap;
+}
+.btn:hover{filter:brightness(1.14)}
+.btn-new{background:var(--acc);color:#111}
+.btn-save{background:#1a6640;color:#fff}
+.btn-saveas{background:#2c5282;color:#fff}
+.btn-pdfc{background:#7c3e1a;color:#fff}
+.btn-pdfmo{background:#1a3f6e;color:#fff}
+.btn-json{background:#164e63;color:#fff}
+.btn-act{background:#7f1d1d;color:#fff}
+
+/* ── TABS ── */
+.tabs-bar{
+  background:var(--hdr2);
+  display:flex;align-items:flex-end;padding:0 14px;gap:1px;
+  overflow-x:auto;scrollbar-width:thin;scrollbar-color:#4a5568 transparent;
+}
+.tab{
+  flex-shrink:0;padding:7px 13px 6px;font-size:11px;font-weight:500;
+  color:rgba(255,255,255,.45);cursor:pointer;
+  border-bottom:3px solid transparent;transition:all .1s;
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.tab:hover{color:rgba(255,255,255,.8)}
+.tab.active{color:var(--acc);border-bottom-color:var(--acc);background:rgba(255,255,255,.06)}
+.tab-x{
+  width:13px;height:13px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.1);color:#fff;font-size:8px;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:all .1s;
+}
+.tab:hover .tab-x{opacity:1}
+.tab-x:hover{background:var(--red)}
+
+/* ── MAIN ── */
+.pg{padding:12px 16px;max-width:1500px;margin:0 auto}
+.cert-panel{display:none}.cert-panel.active{display:block}
+
+/* ── OBRA BAR ── */
+.obra-bar{
+  background:#fff;border:1px solid var(--brd);border-radius:8px;
+  padding:10px 14px;margin-bottom:10px;
+  display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;
+}
+.fld{display:flex;flex-direction:column;gap:3px}
+.fld-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#666}
+.fi{
+  border:1.5px solid var(--brd);border-radius:4px;
+  padding:5px 8px;font-family:var(--sans);font-size:12px;color:var(--ink);
+  background:#fff;transition:border-color .13s;
+}
+.fi:focus{outline:none;border-color:#4a90e2}
+.fi.ed{background:var(--yel);border-color:#c0930a;color:var(--yel-d);font-weight:600}
+.fi.ed:focus{border-color:#8a6a00}
+.fi[readonly]{background:#f1f5f9;color:#556;cursor:default}
+
+/* ── ACT LOG ── */
+.act-log{
+  background:#fdf4ff;border:1px solid #d8b4fe;border-radius:6px;
+  padding:6px 12px;margin-bottom:8px;font-size:10px;color:#6b21a8;
+  display:none;
+}
+.act-log.vis{display:block}
+.act-entry{
+  display:inline-block;background:#ede9fe;border-radius:3px;
+  padding:1px 7px;margin:2px 3px 2px 0;
+  font-family:var(--mono);font-size:10px;
+}
+
+/* ── RESUMEN ── */
+.resumen{
+  display:grid;grid-template-columns:.8fr .95fr .95fr 1.15fr 1.7fr;gap:8px;
+  margin-bottom:10px;align-items:stretch;
+}
+.rc{background:#fff;border:1px solid var(--brd);border-radius:7px;padding:9px 12px}
+.rc-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#777;margin-bottom:3px}
+.rc-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--hdr)}
+/* datos de contexto — presencia visual reducida */
+.rc.tenue{background:#f8fafc;border-color:#e2e8f0}
+.rc.tenue .rc-lbl{color:#94a3b8;font-weight:600}
+.rc.tenue .rc-val{color:#64748b;font-size:12.5px;font-weight:600}
+/* porcentaje de avance dentro del recuadro principal */
+.rc-pct{
+  margin-top:5px;padding-top:5px;border-top:1.5px solid rgba(146,64,14,.25);
+  font-size:10.5px;color:#92400e;font-weight:600;
+}
+.rc-pct strong{font-family:var(--mono);font-size:13px;font-weight:800}
+.rc.pagado{border:2px solid #f59e0b;background:#fffbeb}
+.rc.pagado .rc-lbl{color:#92400e}
+.rc.pagado .rc-val{color:#78350f}
+.pag-inp{
+  font-family:var(--mono);font-size:14px;font-weight:700;color:#78350f;
+  border:2px dashed #f59e0b;border-radius:4px;background:var(--yel);
+  padding:2px 6px;width:100%;
+}
+.pag-inp:focus{outline:none;border-color:#d97706}
+.rc.total{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border:4px solid var(--acc);box-shadow:0 2px 12px rgba(232,160,32,.35)}
+.rc.total .rc-lbl{color:#92400e;font-weight:900;text-transform:uppercase;letter-spacing:.04em;font-size:10px}
+.rc.total .rc-val{color:#92400e;font-size:22px;font-weight:800}
+
+/* ── TABLA ── */
+.tblock{background:#fff;border:1px solid var(--brd);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.th-strip{
+  padding:7px 13px;display:flex;align-items:center;gap:8px;
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;
+}
+/* Cliente - obra gruesa */
+.th-cg{background:var(--sal-h)}
+/* Cliente - obra fina */
+.th-cf{background:#6b4226}
+/* MO - obra gruesa */
+.th-mg{background:var(--mo-gh)}
+/* MO - obra fina */
+.th-mf{background:var(--mo-fh)}
+.th-tipo{font-size:9px;opacity:.75;margin-left:auto;font-weight:500}
+
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{
+  background:var(--hdr);color:#fff;
+  font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:5px 6px;text-align:right;white-space:nowrap;overflow:hidden;
+}
+th.l{text-align:left}
+td{padding:3px 6px;font-size:11px;border-bottom:1px solid #e8eaee;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+
+/* Filas CLIENTE obra gruesa */
+.rg td{background:var(--sal)}
+.rg td:first-child{background:var(--sal-r);color:#fff;font-weight:700;font-family:var(--mono);font-size:10.5px;text-align:center}
+/* Filas CLIENTE obra fina */
+.rf td{background:var(--cel)}
+.rf td:first-child{background:var(--cel-r);color:#fff;font-weight:700;font-family:var(--mono);font-size:10.5px;text-align:center}
+/* Filas MO obra gruesa — verde */
+.rmg td{background:var(--mo-g)}
+.rmg td:first-child{background:var(--mo-gr);color:#fff;font-weight:700;font-family:var(--mono);font-size:10.5px;text-align:center}
+/* Filas MO obra fina — azul acero */
+.rmf td{background:var(--mo-f)}
+.rmf td:first-child{background:var(--mo-fr);color:#fff;font-weight:700;font-family:var(--mono);font-size:10.5px;text-align:center}
+/* Completados */
+.rd td{background:var(--gry)!important;color:var(--gry-d)!important}
+.rd td:first-child{background:#9ca3af!important;color:#fff!important}
+
+/* columnas */
+.c-n{width:30px}
+.c-d{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-i{width:48px;text-align:right;font-family:var(--mono);font-size:9.5px;opacity:.65}
+.c-m{width:96px;text-align:right;font-family:var(--mono);font-size:10.5px}
+.c-p{width:70px;text-align:center}
+.c-a{width:60px;text-align:center}
+/* col desligar MO */
+.c-ck{width:50px;text-align:center}
+/* col importe base */
+.c-ib{width:96px;text-align:right;font-family:var(--mono);font-size:10.5px}
+/* importe base bloqueado (ya hubo actualizaciones) */
+.imp-base-locked{
+  width:100%;text-align:right;border:none;background:transparent;
+  font-family:var(--mono);font-size:10px;color:#6b21a8;cursor:not-allowed;
+  opacity:.8;padding:2px 4px;
+}
+
+/* input % presente */
+.pi{
+  width:52px;padding:3px 4px;
+  border:2px solid #c0930a;border-radius:4px;
+  background:var(--yel);color:var(--yel-d);
+  font-family:var(--mono);font-size:12px;font-weight:700;
+  text-align:right;transition:all .13s;
+}
+.pi:focus{outline:none;border-color:#7a5200;box-shadow:0 0 0 3px rgba(255,213,0,.3)}
+.pi:disabled{background:var(--gry);border-color:#bbb;color:#9ca3af;cursor:not-allowed}
+
+/* checkbox desligar */
+.ck-desl{width:16px;height:16px;cursor:pointer;accent-color:#7c3e1a}
+
+/* PRESENTE: ámbar/dorado — lo certificado en ESTE certificado */
+.vp{display:block;text-align:right;font-family:var(--mono);font-size:10.5px;font-weight:700;background:#fff3cd;color:#7a5200;border-radius:3px;padding:2px 5px}
+.vz{background:transparent;color:#bbb;font-weight:400}
+/* ACUMULADO: verde — total construido hasta la fecha */
+.ba{display:inline-block;padding:2px 6px;border-radius:10px;font-family:var(--mono);font-size:9.5px;font-weight:700;background:var(--grn);color:var(--grn-d)}
+.bd{background:#1a6640;color:#fff}
+.va{font-family:var(--mono);font-size:10px;text-align:right;color:#888}
+.vm{display:block;text-align:right;font-family:var(--mono);font-size:10px;font-weight:700;background:var(--grn);color:var(--grn-d);border-radius:3px;padding:2px 5px}
+
+/* totals row */
+.tr-tot td{background:#f8fafc!important;font-family:var(--mono);font-size:12px;font-weight:700;border-top:2px solid var(--acc)!important;border-bottom:2px solid var(--brd);color:var(--ink)}
+
+/* separador MO */
+.mo-sep{
+  border-top:3px solid #4a7aab;padding-top:14px;margin-top:10px;
+  font-size:10px;font-weight:700;color:#1a4a6e;text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:10px;display:flex;align-items:center;gap:10px;
+  background:linear-gradient(90deg,#e8f0fa 0%,transparent 100%);
+  padding:8px 14px;border-radius:6px;
+}
+.mo-sep-badge{
+  background:#1a3f6e;color:#fff;padding:3px 10px;border-radius:4px;
+  font-size:9px;font-weight:700;letter-spacing:.05em;
+}
+
+/* ── MODAL GENÉRICO ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center}
+.ov.open{display:flex}
+.modal{background:#fff;border-radius:10px;padding:24px 28px;width:430px;max-width:95vw;box-shadow:0 20px 55px rgba(0,0,0,.4)}
+.modal h3{font-size:13px;font-weight:700;margin-bottom:8px}
+.modal p{font-size:11.5px;color:#444;line-height:1.6;margin-bottom:10px}
+.modal-row{display:flex;align-items:center;gap:10px;border-radius:6px;padding:10px 12px;margin-bottom:10px}
+.modal-row label{font-size:10px;font-weight:700;white-space:nowrap}
+.modal-row input{padding:6px 9px;border:2px solid #9333ea;border-radius:4px;font-size:14px;font-weight:700;font-family:var(--mono)}
+.modal-row input:focus{outline:none}
+.modal-note{font-size:10px;color:#777;font-style:italic;margin-bottom:12px}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{background:#e5e7eb;color:#374151}
+
+/* act modal */
+#ovAct .modal h3{color:#7f1d1d}
+#ovAct .modal-row{background:#fdf4ff}
+#ovAct .modal-row label{color:#6b21a8}
+#ovAct .modal-row input{border-color:#9333ea;color:#4a0066;width:100px}
+.btn-confirm-act{background:#7f1d1d;color:#fff}
+
+/* saveas modal */
+#ovSaveAs .saveas-body h3{color:#1e3a5f}
+#ovSaveAs input{width:100%;padding:8px 10px;border:2px solid #3b82f6;border-radius:5px;font-size:13px;font-family:var(--sans);color:var(--ink);margin-bottom:12px}
+#ovSaveAs input:focus{outline:none;border-color:#1d4ed8}
+.btn-confirm-sa{background:#2c5282;color:#fff}
+
+/* ══════════════════════════════════════════
+   PRINT / PDF
+   ══════════════════════════════════════════ */
+@page{size:A4 landscape;margin:0mm 10mm 5mm 10mm}
+@media print{
+  .topbar,.tabs-bar,.tacts,.btn,.ov,
+  .no-print,.mo-sep-screen{display:none!important}
+  .pg{padding:0 2px;max-width:none}
+  html,body{background:#fff!important;font-size:9px}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+
+  /* cabecera compacta */
+  .print-header{display:block!important;padding-top:6mm!important;margin-bottom:6px!important;padding-bottom:5px!important}
+  .ph-title{font-size:13px!important;margin-bottom:2px!important}
+  .ph-sub{font-size:8.5px!important;gap:8px!important}
+  .ph-badge{font-size:10px!important;padding:3px 10px!important}
+
+  /* resumen — aprovechar el ancho landscape */
+  .resumen{grid-template-columns:.8fr .95fr .95fr 1.15fr 1.7fr!important;gap:6px!important;margin-bottom:8px!important;break-inside:avoid}
+  .rc{padding:6px 10px!important}
+  .rc-lbl{font-size:8px!important;margin-bottom:2px!important}
+  .rc-val{font-size:13px!important}
+  .pag-inp{font-size:13px!important}
+  .rc.tenue{background:#f8fafc!important;border-color:#e2e8f0!important}
+  .rc.tenue .rc-lbl{color:#94a3b8!important}
+  .rc.tenue .rc-val{color:#64748b!important;font-size:11.5px!important}
+  .rc-pct{margin-top:4px!important;padding-top:4px!important;font-size:9px!important;color:#92400e!important}
+  .rc-pct strong{font-size:11.5px!important}
+
+  /* tablas — filas compactas, sin solapamiento */
+  th{font-size:7.5px!important;padding:2px 3px!important;line-height:1.2!important}
+  td{font-size:8px!important;padding:1px 3px!important;line-height:1.3!important}
+  .th-strip{padding:4px 8px!important;font-size:8.5px!important}
+  .pi{font-size:8.5px!important;width:38px!important;padding:1px 2px!important}
+
+  /* layout automático — descripción toma el espacio libre */
+  table{table-layout:auto!important}
+  /* ocultar en PDF: Desl., botón ×, I.Base$, Incid., Mto.ant., %ant. */
+  .no-print-col{display:none!important}
+  .no-print{display:none!important}
+  .yes-print{display:block!important}
+  #printTip{display:none!important}
+  /* TODOS los textos en una sola línea */
+  td,th{white-space:nowrap!important;overflow:hidden!important}
+  /* descripción: 1 línea, ancho mínimo garantizado */
+  .c-d,.c-d input{white-space:nowrap!important;overflow:visible!important;min-width:260px!important;max-width:none!important;width:100%!important}
+  /* columnas numéricas compactas */
+  .c-m{width:74px!important;min-width:70px!important}
+  .c-a{width:40px!important;min-width:36px!important}
+  .c-p{width:50px!important;min-width:44px!important}
+  .c-n{width:20px!important}
+  /* act-log visible en PDF */
+  .act-log.vis{
+    display:block!important;
+    background:#f3e8ff!important;border:1px solid #9333ea!important;
+    padding:4px 10px!important;margin-bottom:6px!important;
+    font-size:8px!important;color:#581c87!important;
+    break-inside:avoid!important;
+  }
+
+  /* forzar colores */
+  .rg td{background:var(--sal)!important}
+  .rg td:first-child{background:var(--sal-r)!important;color:#fff!important}
+  .rf td{background:var(--cel)!important}
+  .rf td:first-child{background:var(--cel-r)!important;color:#fff!important}
+  .rmg td{background:var(--mo-g)!important}
+  .rmg td:first-child{background:var(--mo-gr)!important;color:#fff!important}
+  .rmf td{background:var(--mo-f)!important}
+  .rmf td:first-child{background:var(--mo-fr)!important;color:#fff!important}
+  .rd td{background:var(--gry)!important;color:#999!important}
+  .th-cg{background:var(--sal-h)!important;color:#fff!important}
+  .th-cf{background:#6b4226!important;color:#fff!important}
+  .th-mg{background:var(--mo-gh)!important;color:#fff!important}
+  .th-mf{background:var(--mo-fh)!important;color:#fff!important}
+  th{background:var(--hdr)!important;color:#fff!important}
+
+  /* fila de totales: fondo blanco, letra más prominente */
+  .tr-tot td{
+    background:#fff!important;
+    font-size:10px!important;
+    font-weight:700!important;
+    border-top:2px solid var(--acc)!important;
+    border-bottom:1px solid #ccc!important;
+  }
+
+  .rc.total{background:#fef3c7!important;border:4px solid var(--acc)!important;box-shadow:none!important}
+  .rc.total .rc-lbl{color:#92400e!important;font-weight:900!important;text-transform:uppercase!important;font-size:9px!important}
+  .rc.total .rc-val{color:#92400e!important;font-size:18px!important;font-weight:800!important}
+  .rc.pagado{background:#fffbeb!important;border:2px solid #f59e0b!important}
+  .pag-inp{background:var(--yel)!important;-webkit-appearance:textfield;border:1px dashed #f59e0b!important}
+  .pi{background:var(--yel)!important;-webkit-appearance:textfield;border:1px solid #c0930a!important}
+
+  /* ocultar secciones según modo PDF */
+  body.pdf-cliente .section-mo{display:none!important}
+  body.pdf-mo .section-cliente{display:none!important}
+  body.pdf-mo .mo-sep{display:none!important}
+
+  /* ocultar elementos que no son del documento */
+  .obra-bar,.mo-sep{display:none!important}
+
+  /* pie al final del documento — flujo normal, NUNCA se solapa */
+  .print-footer{
+    display:flex!important;
+    position:static!important;
+    border-top:2px solid var(--acc)!important;
+    padding-top:6px!important;
+    margin-top:16px!important;
+    justify-content:space-between;align-items:flex-start;
+    break-before:avoid!important;
+  }
+  .pf-name{font-size:10px!important}
+  .pf-role,.pf-mp,.pf-right{font-size:8.5px!important}
+
+  /* columna importe base: en print mostrar como texto */
+  .imp-base-locked,.c-ib input{
+    -webkit-appearance:none;appearance:none;
+    border:none!important;background:transparent!important;
+    box-shadow:none!important;outline:none!important;
+    padding:0!important;width:auto!important;
+    color:inherit!important;font-weight:inherit!important;
+    text-align:right!important;font-family:var(--mono)!important;
+  }
+  /* inputs editables: aspecto texto limpio en print */
+  .imp-inp,.desc-inp,.incid-inp{
+    -webkit-appearance:none;appearance:none;
+    border:none!important;background:transparent!important;
+    box-shadow:none!important;outline:none!important;
+    padding:0!important;
+    color:inherit!important;font-weight:inherit!important;
+    font-family:inherit!important;font-size:inherit!important;
+  }
+  .imp-inp{width:auto!important;text-align:right!important}
+  .desc-inp{width:100%!important;text-align:left!important}
+  .incid-inp{width:auto!important;text-align:right!important}
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+
+  .cert-panel{display:none!important}
+  .cert-panel.active{display:block!important}
+  /* permitir saltos de página dentro de las tablas */
+  .tblock{break-inside:auto!important;margin-bottom:4px}
+  tr{break-inside:avoid!important}
+  /* resumen y cabecera no se cortan */
+  .print-header,.resumen{break-inside:avoid!important}
+}
+
+/* cabecera y pie solo en print */
+.print-header,.print-footer{display:none}
+
+/* inputs editables inline (importe, descripción, incidencia) */
+.imp-inp,.desc-inp,.incid-inp{
+  width:100%;padding:2px 4px;
+  border:1.5px solid transparent;border-radius:3px;
+  background:transparent;color:inherit;
+  font-family:inherit;font-size:inherit;
+  transition:all .13s;cursor:text;
+}
+.imp-inp{text-align:right;font-family:var(--mono);font-size:10.5px;font-weight:700}
+.incid-inp{text-align:right;font-family:var(--mono);font-size:9.5px;opacity:.65;width:52px}
+.imp-inp:hover,.desc-inp:hover,.incid-inp:hover{border-color:#c0930a;background:var(--yel)}
+.imp-inp:focus,.desc-inp:focus,.incid-inp:focus{outline:none;border-color:#7a5200;background:var(--yel);color:var(--yel-d);box-shadow:0 0 0 2px rgba(255,213,0,.3)}
+
+/* importe base bloqueado */
+.imp-base-locked{
+  width:100%;padding:2px 4px;border-radius:3px;
+  background:#f1f5f9;border:1.5px solid #cbd5e1;
+  color:#94a3b8;font-family:var(--mono);font-size:10.5px;
+  font-weight:600;text-align:right;cursor:not-allowed;
+}
+.imp-base-locked:hover{border-color:#e8a020;background:#fffbeb}
+.c-ib{width:96px;text-align:right}
+
+/* columna de acciones (delete) */
+.c-act{width:22px;text-align:center;padding:2px!important}
+.btn-del{
+  width:15px;height:15px;border-radius:50%;border:none;cursor:pointer;
+  background:#fee2e2;color:#dc2626;font-size:9px;font-weight:900;
+  display:inline-flex;align-items:center;justify-content:center;
+  opacity:.35;transition:all .13s;padding:0;line-height:1;
+}
+.btn-del:hover{opacity:1;background:#dc2626;color:#fff}
+
+/* botón agregar ítem */
+.btn-add-item{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.6);border:1.5px dashed #aaa;
+  border-radius:4px;padding:4px 14px;
+  font-size:10px;font-weight:600;color:#777;font-family:var(--sans);
+  cursor:pointer;margin:3px 0 8px;transition:all .13s;
+}
+.btn-add-item:hover{border-color:var(--acc);color:var(--acc);background:#fffbeb}
+
+/* ── CABECERA PDF ── */
+.print-header{
+  border-bottom:3px solid var(--acc);
+  margin-bottom:14px;padding-bottom:8px;
+}
+.ph-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.ph-title{font-size:17px;font-weight:700;color:var(--ink)}
+.ph-sub{font-size:10px;color:#666;display:flex;gap:14px;flex-wrap:wrap}
+.ph-sub span{display:flex;align-items:center;gap:3px}
+.ph-badge{
+  background:var(--acc);color:#111;
+  padding:5px 14px;border-radius:6px;
+  font-family:var(--mono);font-size:12px;font-weight:700;
+  white-space:nowrap;flex-shrink:0;
+}
+
+/* ── PIE PDF ── */
+.print-footer{
+  border-top:2px solid var(--acc);
+  padding-top:8px;margin-top:12px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+}
+.pf-left{font-size:11px;line-height:1.6}
+.pf-name{font-size:13px;font-weight:700;color:var(--acc);letter-spacing:.03em}
+.pf-role{font-size:11px;font-weight:600;color:var(--ink)}
+.pf-mp{font-size:10.5px;color:#555}
+.pf-right{font-size:10.5px;color:#444;text-align:right;line-height:1.7}
+
+/* ── OBRAS + DRIVE ── */
+.btn-obras{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);max-width:320px;overflow:hidden;text-overflow:ellipsis}
+.btn-obras span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drive-ind{align-items:center;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);white-space:nowrap}
+.drive-ind.pending{color:#fcd34d}
+.drive-ind.saving{color:#93c5fd}
+.drive-ind.saved{color:#86efac}
+.drive-ind.error{color:#fca5a5;background:rgba(220,38,38,.2)}
+#ovObras .modal{width:680px;max-height:88vh;overflow:auto}
+.obra-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--brd);border-radius:7px;margin-bottom:6px;background:#fff}
+.obra-item.act{border:2px solid var(--acc);background:#fffbeb}
+.obra-info{flex:1;min-width:0}
+.obra-nom{font-size:12.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.obra-meta{font-size:10.5px;color:#64748b;margin-top:2px}
+.obra-btns{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.obra-abierta{font-size:10px;font-weight:700;color:#92400e;padding:0 6px}
+.btn-ghost{background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}
+.btn-ghost-red:hover{background:#fee2e2;color:#b91c1c}
+.obras-acc{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.obras-sec-t{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#475569;margin:14px 0 6px}
+.obras-vacio{font-size:11px;color:#94a3b8;padding:4px 2px}
+.vers-hito{color:#1a6640;font-weight:700}
+.oc-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+  background:#1e293b;color:#fff;padding:9px 16px;border-radius:8px;font-size:12px;z-index:900;box-shadow:0 6px 24px rgba(0,0,0,.35);
+  transition:all .2s;max-width:92vw;display:flex;align-items:center}
+.oc-toast.vis{opacity:1;transform:translateX(-50%);pointer-events:auto}
+@media print{.btn-obras,.drive-ind,.oc-toast,#ovObras{display:none!important}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <span class="brand">ObraCertif</span>
+  <div class="sep"></div>
+  <button class="btn btn-obras" onclick="openObras()" title="Cambiar de obra, crear, importar o respaldar">🏗 <span id="obraActivaLbl">Obra</span> ▾</button>
+  <span class="drive-ind" id="driveIndicator" style="display:none" onclick="openObras()" title="Respaldo en Google Drive"></span>
+  <div class="tacts">
+    <button class="btn btn-new"    onclick="newCert()">＋ Nuevo certificado</button>
+    <button class="btn btn-act"    onclick="openActModal()">⟳ Actualizar precios</button>
+    <button class="btn btn-save"   onclick="guardar()">💾 Guardar</button>
+    <button class="btn btn-saveas" onclick="openSaveAs()">📋 Copia offline</button>
+    <button class="btn btn-pdfc"   onclick="pdfCliente()" title="💡 Tip: desmarcar «Encabezados y pies de página» en el diálogo de Chrome&#10;para eliminar la fecha/hora (arriba) y la ruta del archivo (abajo)">⎙ PDF Cliente</button>
+    <button class="btn btn-pdfmo"  onclick="pdfMO()"      title="💡 Tip: desmarcar «Encabezados y pies de página» en el diálogo de Chrome&#10;para eliminar la fecha/hora (arriba) y la ruta del archivo (abajo)">⎙ PDF Mano de Obra</button>
+    <button class="btn btn-json"   onclick="exportJSON()">↓ JSON</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar" id="tabsBar"></div>
+
+<!-- CONTENT -->
+<div class="pg" id="pg"></div>
+<!-- PIE DE PÁGINA PDF — position:fixed, visible en todas las páginas -->
+<div class="print-footer" id="printFooter"></div>
+
+<!-- MODAL OBRAS -->
+<div class="ov" id="ovObras">
+  <div class="modal">
+    <h3>🏗 Obras</h3>
+    <p>Cada obra guarda todos sus certificados. Se guarda sola en este navegador y, si está conectado, en Google Drive.</p>
+    <div id="obrasLista"></div>
+    <div class="obras-acc">
+      <button class="btn btn-new" onclick="nuevaObra()">＋ Nueva obra</button>
+      <button class="btn btn-saveas" onclick="document.getElementById('impFile').click()" title="HTML guardado con la versión anterior, o respaldo .json">⤒ Importar archivo</button>
+      <button class="btn btn-ghost" onclick="exportarTodo()" title="Un solo .json con todas las obras">⤓ Respaldo de todas las obras</button>
+      <input type="file" id="impFile" accept=".html,.htm,.json" style="display:none" onchange="importarArchivo(this)">
+    </div>
+    <div id="obrasDrive"></div>
+    <div id="obrasVers"></div>
+    <div class="modal-acts" style="margin-top:14px">
+      <button class="btn btn-cancel" onclick="closeObras()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ACTUALIZAR PRECIOS -->
+<div class="ov" id="ovAct">
+  <div class="modal" style="width:460px">
+    <h3>⟳ Actualizar precios</h3>
+    <p>El porcentaje impacta <strong>solo sobre lo que queda por pagar</strong> de cada ítem. Lo ya certificado queda <strong>congelado en su valor original</strong>. Los ítems al 100% no se modifican.</p>
+    <p style="font-size:10.5px;color:#555;margin-bottom:10px">
+      El <em>Importe Vigente</em> de cada ítem cambiará: la parte paga mantiene su valor en $ y la parte pendiente se multiplica por (1 + %/100).
+    </p>
+    <div class="modal-row" style="background:#fdf4ff;gap:12px">
+      <label style="color:#6b21a8">FECHA</label>
+      <input type="text" id="actFecha" maxlength="10" placeholder="dd/mm/aaaa"
+        style="width:110px;border-color:#c084fc"
+        oninput="fmtDateInput(this)">
+      <label style="color:#6b21a8;margin-left:8px">% ACTUALIZACIÓN</label>
+      <input type="number" id="actPct" step="0.01" min="0.01" max="9999" value=""
+        placeholder="ej: 20"
+        style="width:80px;border-color:#9333ea">
+      <span style="font-size:12px;color:#555">%</span>
+    </div>
+    <p class="modal-note">Nuevo pendiente = monto_pendiente_actual × (1 + % / 100)</p>
+    <div class="modal-acts">
+      <button class="btn btn-cancel" onclick="closeAct()">Cancelar</button>
+      <button class="btn btn-confirm-act" onclick="applyAct()">Aplicar actualización</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GUARDAR COMO -->
+<div class="ov" id="ovSaveAs">
+  <div class="modal saveas-body">
+    <h3>📋 Descargar copia offline</h3>
+    <p>Descarga un HTML con esta obra adentro, para abrir sin internet o mandar a alguien. Tus obras ya se guardan solas en el navegador y en Drive: esto es sólo una copia extra.</p>
+    <input type="text" id="saName" placeholder="ObraCertif_NombreObra">
+    <div class="modal-acts">
+      <button class="btn btn-cancel" onclick="closeSaveAs()">Cancelar</button>
+      <button class="btn btn-confirm-sa" onclick="doSaveAs()">Descargar copia</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR RUBRO -->
+<div class="ov" id="ovAddRubro">
+  <div class="modal" style="width:360px">
+    <h3>＋ Agregar rubro</h3>
+    <p>Se creará una nueva sección de ítems al final de la obra.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+      <div class="fld">
+        <span class="fld-lbl">Nombre del rubro ★</span>
+        <input id="arLabel" class="fi" type="text" placeholder="Ej: Instalación eléctrica" style="width:100%"
+          onkeydown="if(event.key==='Enter')doAddRubro()">
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-cancel" onclick="closeAddRubro()">Cancelar</button>
+      <button class="btn btn-save" onclick="doAddRubro()">Crear rubro</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR ÍTEM -->
+<div class="ov" id="ovAddItem">
+  <div class="modal" style="width:480px">
+    <h3>＋ Agregar ítem</h3>
+    <p>El ítem se agrega en <em>todos</em> los certificados con avance 0. Los ítems posteriores se renumeran automáticamente.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+      <div class="fld">
+        <span class="fld-lbl">Descripción ★</span>
+        <input id="aiDesc" class="fi" type="text" placeholder="Descripción del ítem" style="width:100%">
+      </div>
+      <div style="display:flex;gap:10px">
+        <div class="fld" style="flex:1">
+          <span class="fld-lbl">Importe Cliente $</span>
+          <input id="aiImpC" class="fi" type="number" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div class="fld" style="flex:1">
+          <span class="fld-lbl">Importe MO $</span>
+          <input id="aiImpMO" class="fi" type="number" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div class="fld" style="width:80px">
+          <span class="fld-lbl">Incid. %</span>
+          <input id="aiIncid" class="fi" type="number" min="0" max="100" step="0.01" placeholder="0,00">
+        </div>
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-cancel" onclick="closeAddItem()">Cancelar</button>
+      <button class="btn btn-save" onclick="doAddItem()">Agregar ítem</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE_C  = [{"n": 1, "desc": "Preparaci\u00f3n de terreno: limpieza y nivelaci\u00f3n b\u00e1sicas y replanteo", "incid": 0.0065, "importe": 369265, "grupo": "gruesa"}, {"n": 2, "desc": "Excavaci\u00f3n de cimientos, vigas de arriostramiento y bases", "incid": 0.0375, "importe": 2130375, "grupo": "gruesa"}, {"n": 3, "desc": "Colocaci\u00f3n de nylon, dos capas", "incid": 0.0075, "importe": 426075, "grupo": "gruesa"}, {"n": 4, "desc": "Llenado de cimientos con hormig\u00f3n elaborado", "incid": 0.0075, "importe": 426075, "grupo": "gruesa"}, {"n": 5, "desc": "Llenado de hormig\u00f3n de limpieza", "incid": 0.005, "importe": 284050, "grupo": "gruesa"}, {"n": 6, "desc": "Armado y llenado de bases con hormig\u00f3n elaborado", "incid": 0.0125, "importe": 710125, "grupo": "gruesa"}, {"n": 7, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de vigas inferiores", "incid": 0.0525, "importe": 2982525, "grupo": "gruesa"}, {"n": 8, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de columnas", "incid": 0.0525, "importe": 2982525, "grupo": "gruesa"}, {"n": 9, "desc": "Relleno y compactaci\u00f3n para contrapiso", "incid": 0.02, "importe": 1136200, "grupo": "gruesa"}, {"n": 10, "desc": "Llenado contrapiso com\u00fan", "incid": 0.03, "importe": 1704300, "grupo": "gruesa"}, {"n": 11, "desc": "Mamposter\u00eda para revoque", "incid": 0.0675, "importe": 3834675, "grupo": "gruesa"}, {"n": 12, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de vigas dintel", "incid": 0.0175, "importe": 994175, "grupo": "gruesa"}, {"n": 13, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de vigas superiores", "incid": 0.07, "importe": 3976700, "grupo": "gruesa"}, {"n": 14, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de losa pretensada", "incid": 0.0625, "importe": 3550625, "grupo": "gruesa"}, {"n": 15, "desc": "Corte, armado y montaje de estructura met\u00e1lica (zona social)", "incid": 0.04, "importe": 2272400, "grupo": "gruesa"}, {"n": 16, "desc": "Revoque grueso en muros interiores", "incid": 0.0475, "importe": 2698475, "grupo": "gruesa"}, {"n": 17, "desc": "Revoque grueso en muros exteriores", "incid": 0.025, "importe": 1420250, "grupo": "gruesa"}, {"n": 18, "desc": "Revoque grueso cielorraso losa", "incid": 0.025, "importe": 1420250, "grupo": "gruesa"}, {"n": 19, "desc": "Tanque de reserva completo (estructura y revoques)", "incid": 0.029, "importe": 1647490, "grupo": "fina"}, {"n": 20, "desc": "Esquineros interiores y exteriores", "incid": 0.02, "importe": 1136200, "grupo": "fina"}, {"n": 21, "desc": "Cubierta de techos (hormig\u00f3n con perlitas y planchas, membrana)", "incid": 0.045, "importe": 2556450, "grupo": "fina"}, {"n": 22, "desc": "Parapeto / mamposter\u00eda en cubierta de techos", "incid": 0.0165, "importe": 937365, "grupo": "fina"}, {"n": 23, "desc": "Revoque fino en muros interiores", "incid": 0.0325, "importe": 1846325, "grupo": "fina"}, {"n": 24, "desc": "Revoque fino en muros exteriores", "incid": 0.0175, "importe": 994175, "grupo": "fina"}, {"n": 25, "desc": "Revoque fino cielorraso losa", "incid": 0.0175, "importe": 994175, "grupo": "fina"}, {"n": 26, "desc": "Cielorraso machimbre y cierre met\u00e1lico (cenefa) de techo liviano", "incid": 0.025, "importe": 1420250, "grupo": "fina"}, {"n": 27, "desc": "Carpeta niveladora bajo pisos", "incid": 0.0325, "importe": 1846325, "grupo": "fina"}, {"n": 28, "desc": "Colocaci\u00f3n de pisos", "incid": 0.065, "importe": 3692650, "grupo": "fina"}, {"n": 29, "desc": "Colocaci\u00f3n de z\u00f3calos", "incid": 0.0215, "importe": 1221415, "grupo": "fina"}, {"n": 30, "desc": "Colocaci\u00f3n de umbrales", "incid": 0.005, "importe": 284050, "grupo": "fina"}, {"n": 31, "desc": "Colocaci\u00f3n de carpinter\u00edas: marcos, premarcos y recuadros", "incid": 0.026, "importe": 1477060, "grupo": "fina"}, {"n": 32, "desc": "Revestimiento de dos ba\u00f1os: completo y toilette", "incid": 0.0225, "importe": 1278225, "grupo": "fina"}, {"n": 33, "desc": "Revestimiento de lavadero (sobre mesada)", "incid": 0.004, "importe": 227240, "grupo": "fina"}, {"n": 34, "desc": "Revestimiento de cocina (sobre mesada)", "incid": 0.004, "importe": 227240, "grupo": "fina"}, {"n": 35, "desc": "Limpieza de obra", "incid": 0.03, "importe": 1704300, "grupo": "fina"}];
+const BASE_MO = [{"n": 1, "desc": "Preparaci\u00f3n de terreno: limpieza y nivelaci\u00f3n b\u00e1sicas y replanteo", "incid": 0.0075, "importe": 277500, "grupo": "gruesa"}, {"n": 2, "desc": "Excavaci\u00f3n de cimientos, vigas de arriostramiento y bases", "incid": 0.0375, "importe": 1387500, "grupo": "gruesa"}, {"n": 3, "desc": "Colocaci\u00f3n de nylon, dos capas", "incid": 0.01, "importe": 370000, "grupo": "gruesa"}, {"n": 4, "desc": "Llenado de cimientos con hormig\u00f3n elaborado", "incid": 0.0075, "importe": 277500, "grupo": "gruesa"}, {"n": 5, "desc": "Llenado de hormig\u00f3n de limpieza", "incid": 0.005, "importe": 185000, "grupo": "gruesa"}, {"n": 6, "desc": "Armado y llenado de bases con hormig\u00f3n elaborado", "incid": 0.0125, "importe": 462500, "grupo": "gruesa"}, {"n": 7, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de vigas inferiores", "incid": 0.05, "importe": 1850000, "grupo": "gruesa"}, {"n": 8, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de columnas", "incid": 0.0525, "importe": 1942500, "grupo": "gruesa"}, {"n": 9, "desc": "Relleno y compactaci\u00f3n para contrapiso", "incid": 0.022, "importe": 814000, "grupo": "gruesa"}, {"n": 10, "desc": "Llenado contrapiso com\u00fan", "incid": 0.03, "importe": 1110000, "grupo": "gruesa"}, {"n": 11, "desc": "Mamposter\u00eda para revoque", "incid": 0.0675, "importe": 2497500, "grupo": "gruesa"}, {"n": 12, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de vigas dintel", "incid": 0.0175, "importe": 647500, "grupo": "gruesa"}, {"n": 13, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de vigas superiores", "incid": 0.07, "importe": 2590000, "grupo": "gruesa"}, {"n": 14, "desc": "Armado, colocaci\u00f3n, encofrado y llenado de losa pretensada", "incid": 0.0625, "importe": 2312500, "grupo": "gruesa"}, {"n": 15, "desc": "Corte, armado y montaje de estructura met\u00e1lica (zona social)", "incid": 0.0, "importe": 0, "grupo": "gruesa"}, {"n": 16, "desc": "Revoque grueso en muros interiores", "incid": 0.05, "importe": 1850000, "grupo": "gruesa"}, {"n": 17, "desc": "Revoque grueso en muros exteriores", "incid": 0.0275, "importe": 1017500, "grupo": "gruesa"}, {"n": 18, "desc": "Revoque grueso cielorraso losa", "incid": 0.0275, "importe": 1017500, "grupo": "gruesa"}, {"n": 19, "desc": "Tanque de reserva completo (estructura y revoques)", "incid": 0.03, "importe": 1110000, "grupo": "fina"}, {"n": 20, "desc": "Esquineros interiores y exteriores", "incid": 0.02, "importe": 740000, "grupo": "fina"}, {"n": 21, "desc": "Cubierta de techos (hormig\u00f3n con perlitas y planchas, membrana)", "incid": 0.0475, "importe": 1757500, "grupo": "fina"}, {"n": 22, "desc": "Parapeto / mamposter\u00eda en cubierta de techos", "incid": 0.0125, "importe": 462500, "grupo": "fina"}, {"n": 23, "desc": "Revoque fino en muros interiores", "incid": 0.0325, "importe": 1202500, "grupo": "fina"}, {"n": 24, "desc": "Revoque fino en muros exteriores", "incid": 0.02, "importe": 740000, "grupo": "fina"}, {"n": 25, "desc": "Revoque fino cielorraso losa", "incid": 0.0175, "importe": 647500, "grupo": "fina"}, {"n": 26, "desc": "Cielorraso machimbre y cierre met\u00e1lico (cenefa) de techo liviano", "incid": 0.025, "importe": 925000, "grupo": "fina"}, {"n": 27, "desc": "Carpeta niveladora bajo pisos", "incid": 0.035, "importe": 1295000, "grupo": "fina"}, {"n": 28, "desc": "Colocaci\u00f3n de pisos", "incid": 0.0675, "importe": 2497500, "grupo": "fina"}, {"n": 29, "desc": "Colocaci\u00f3n de z\u00f3calos", "incid": 0.025, "importe": 925000, "grupo": "fina"}, {"n": 30, "desc": "Colocaci\u00f3n de umbrales", "incid": 0.0075, "importe": 277500, "grupo": "fina"}, {"n": 31, "desc": "Colocaci\u00f3n de carpinter\u00edas: marcos, premarcos y recuadros", "incid": 0.03, "importe": 1110000, "grupo": "fina"}, {"n": 32, "desc": "Revestimiento de dos ba\u00f1os: completo y toilette", "incid": 0.025, "importe": 925000, "grupo": "fina"}, {"n": 33, "desc": "Revestimiento de lavadero (sobre mesada)", "incid": 0.004, "importe": 148000, "grupo": "fina"}, {"n": 34, "desc": "Revestimiento de cocina (sobre mesada)", "incid": 0.004, "importe": 148000, "grupo": "fina"}, {"n": 35, "desc": "Limpieza de obra", "incid": 0.045, "importe": 1665000, "grupo": "fina"}];
+
+// ── CONSTANTES DEL PROFESIONAL ──────────────────────────
+const PROF = {
+  nombre: 'Federico Pickelny',
+  titulo: 'Arquitecto',
+  mp:     'MP 2304',
+  tel:    '264 4397772',
+  mail:   'federicopickelny@gmail.com',
+  dir:    'B. Rivadavia Oeste 114'
+};
+
+// ── ESTADO ───────────────────────────────────────────────
+let S = null;
+const SAVED_STATE = null; // <<SAVED_STATE>>
+
+
+function makeCert(id,prev){
+  const carry=p=>({
+    n:p.n,desc:p.desc,incid:p.incid,grupo:p.grupo,
+    importe_base:  p.importe_base||p.importe_actual,  // precio original del contrato
+    importe_actual:p.importe_actual,                   // precio vigente (cambia con actualizaciones)
+    pct_ant:p.pct_acum,pct_pres:0,pct_acum:p.pct_acum,desl_mo:false,
+  });
+  const fresh=b=>({
+    n:b.n,desc:b.desc,incid:b.incid,grupo:b.grupo,
+    importe_base:  b.importe,
+    importe_actual:b.importe,
+    pct_ant:0,pct_pres:0,pct_acum:0,desl_mo:false,
+  });
+  return{
+    id,label:`Certif. ${id}`,
+    fecha_medicion:'',fecha_pago:'',
+    pagado_anterior:    prev?Math.round(prev.items_c .reduce((s,i)=>s+i.importe_actual*i.pct_acum,0)):0,
+    pagado_mo_anterior: prev?Math.round(prev.items_mo.reduce((s,i)=>s+i.importe_actual*i.pct_acum,0)):0,
+    act_log:[],
+    items_c: prev?prev.items_c.map(carry):BASE_C.map(fresh),
+    items_mo:prev?prev.items_mo.map(carry):BASE_MO.map(fresh),
+  };
+}
+
+// ── HELPERS ──────────────────────────────────────────────
+const fm = n=>n==null?'—':'$ '+n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fp = p=>(p*100).toFixed(1)+'%';
+// Parsea un valor ingresado como texto (formato argentino o número crudo) → número
+function parsePagado(s){
+  s=(s||'').trim().replace(/^\$\s*/,''); // quitar $ y espacios
+  if(s.includes(',')){
+    // formato argentino: puntos=miles, coma=decimal → "1.234.567,89"
+    s=s.replace(/\./g,'').replace(',','.');
+  } else {
+    // sin coma: si hay múltiples puntos son separadores de miles
+    if((s.match(/\./g)||[]).length>1) s=s.replace(/\./g,'');
+  }
+  return parseFloat(s)||0;
+}
+const tot= items=>items.reduce((a,it)=>({
+  pres:a.pres+it.importe_actual*it.pct_pres,
+  acum:a.acum+it.importe_actual*it.pct_acum,
+  ant: a.ant +it.importe_actual*it.pct_ant,
+  base:a.base+it.importe_actual,
+}),{pres:0,acum:0,ant:0,base:0});
+function diasTransc(c){
+  if(!S.obra.inicio||!c.fecha_medicion)return'—';
+  const a=parseDate(S.obra.inicio), b=parseDate(c.fecha_medicion);
+  const d=Math.round((new Date(b)-new Date(a))/86400000);
+  return d>=0?d+' días':'—';
+}
+function fmtDate(s){
+  if(!s)return'—';
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(s))return s;
+  const [y,m,d]=s.split('-');
+  if(!d||!m||!y)return'—';
+  return `${d}/${m}/${y}`;
+}
+// Convierte cualquier formato legible → YYYY-MM-DD
+function parseDate(s){
+  if(!s)return'';
+  s=s.trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // dd/mm/aaaa, dd-mm-aaaa, d/m/aa, etc.
+  const m=s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  if(m){
+    const y=m[3].length===2?'20'+m[3]:m[3];
+    return`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  }
+  // Solo 8 dígitos: ddmmaaaa
+  const d8=s.replace(/\D/g,'');
+  if(d8.length===8)return`${d8.slice(4)}-${d8.slice(2,4)}-${d8.slice(0,2)}`;
+  return s;
+}
+// Inserta barras suavemente al escribir (solo cuando suma dígitos, no al borrar)
+function fmtDateInput(el){
+  const prev=el._fdi||'';
+  const cur=el.value;
+  if(cur.length<=prev.length){el._fdi=cur;return;} // borrado → no tocar
+  const raw=cur.replace(/\D/g,'');
+  let v=raw;
+  if(raw.length>2) v=raw.slice(0,2)+'/'+raw.slice(2);
+  if(raw.length>4) v=raw.slice(0,2)+'/'+raw.slice(2,4)+'/'+raw.slice(4,8);
+  if(v.length>10)v=v.slice(0,10);
+  if(v!==cur){
+    const pos=el.selectionStart+(v.length-cur.length);
+    el.value=v;
+    try{el.setSelectionRange(pos,pos);}catch(e){}
+  }
+  el._fdi=el.value;
+}
+
+// ── RENDER ───────────────────────────────────────────────
+function render(){ renderTabs(); renderPg(); persist(); }
+
+function renderTabs(){
+  document.getElementById('tabsBar').innerHTML=S.certs.map((c,i)=>`
+    <div class="tab${i===S.active?' active':''}" onclick="sw(${i})">
+      ${c.label}
+      ${S.certs.length>1?`<button class="tab-x" onclick="delC(${i},event)">×</button>`:''}
+    </div>`).join('');
+}
+
+function renderPg(){
+  const pg=document.getElementById('pg');
+  pg.innerHTML='';
+  S.certs.forEach((c,ci)=>{
+    const d=document.createElement('div');
+    d.className='cert-panel'+(ci===S.active?' active':'');
+    d.id=`p${ci}`;
+    d.innerHTML=buildCert(c,ci);
+    pg.appendChild(d);
+  });
+}
+function patch(ci){
+  const c=S.certs[ci],old=document.getElementById(`p${ci}`);
+  if(!old)return;
+  const nd=document.createElement('div');
+  nd.className=old.className;nd.id=old.id;
+  nd.innerHTML=buildCert(c,ci);
+  old.replaceWith(nd);persist();
+}
+
+// ── BUILD CERT ────────────────────────────────────────────
+function buildCert(c,ci){
+  const rubros=S.rubros||[{id:'gruesa',label:'Obra Gruesa'},{id:'fina',label:'Obra Fina'}];
+  const tC=tot(c.items_c),tMO=tot(c.items_mo);
+  const pa=c.pagado_anterior||0, pamo=c.pagado_mo_anterior||0;
+  const aP=tC.acum-pa, aPmo=tMO.acum-pamo;
+
+  return `
+  ${buildPrintHeader(c,ci)}
+  ${buildObraBar(c,ci)}
+  ${buildActLog(c)}
+  <div class="section-cliente">
+    ${buildResumen(c,ci,tC,pa,aP,'c')}
+    ${rubros.map(r=>buildTable(c,ci,'c',r)).join('')}
+    <div class="no-print" style="padding:4px 8px 8px">
+      <button class="btn-add-item" style="background:#4a7aab;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600"
+        onclick="openAddRubro()">＋ Agregar rubro</button>
+    </div>
+  </div>
+  <div class="mo-sep no-print">
+    <span class="mo-sep-badge">USO INTERNO</span>
+    PLANILLA MANO DE OBRA — no entregar al propietario
+  </div>
+  <div class="section-mo">
+    ${buildResumen(c,ci,tMO,pamo,aPmo,'mo')}
+    ${rubros.map(r=>buildTable(c,ci,'mo',r)).join('')}
+  </div>`;
+}
+
+function buildPrintHeader(c,ci){
+  // Busca la última actualización en este cert o en cualquier anterior
+  let lastAct = null;
+  for(let i=ci;i>=0;i--){
+    const log=S.certs[i].act_log;
+    if(log&&log.length){lastAct=log[log.length-1];break;}
+  }
+  const actBadge = lastAct
+    ? `<span style="background:#7c3aed;color:#fff;padding:2px 8px;border-radius:4px;font-size:8px;font-weight:700;white-space:nowrap">
+        ⟳ Últ. actualiz.: ${lastAct.fecha} · +${lastAct.pct}%
+       </span>`
+    : '';
+  return `<div class="print-header">
+    <div class="ph-top">
+      <div class="ph-title">Certificado de Avance Físico — ${c.label} ${actBadge}</div>
+      <div class="ph-badge">ObraCertif</div>
+    </div>
+    <div class="ph-sub">
+      <span><strong>Propietario:</strong> ${S.obra.propietario||'—'}</span>
+      <span><strong>Obra:</strong> ${S.obra.obra||'—'} · ${S.obra.localidad||'—'}</span>
+      <span><strong>Fecha medición:</strong> ${fmtDate(c.fecha_medicion)}</span>
+      <span><strong>Inicio:</strong> ${fmtDate(S.obra.inicio)}</span>
+      <span><strong>Días:</strong> ${diasTransc(c)}</span>
+      ${c.fecha_pago?`<span><strong>Fecha pago:</strong> ${fmtDate(c.fecha_pago)}</span>`:''}
+    </div>
+  </div>`;
+}
+
+function buildPrintFooterBody(){
+  return `
+    <div class="pf-left">
+      <div class="pf-name">${PROF.nombre.toUpperCase()}</div>
+      <div class="pf-role">${PROF.titulo}</div>
+      <div class="pf-mp">${PROF.mp}</div>
+    </div>
+    <div class="pf-right">
+      ☎ ${PROF.tel}<br>
+      ✉ ${PROF.mail}<br>
+      ⌂ ${PROF.dir}
+    </div>`;
+}
+
+function buildPrintFooter(){
+  return `<div class="print-footer">${buildPrintFooterBody()}</div>`;
+}
+
+// ── OBRA BAR ──────────────────────────────────────────────
+function buildObraBar(c,ci){
+  const o=S.obra;
+  const dateInput=(lbl,val,onch,w)=>`
+    <div class="fld" style="min-width:${w}px">
+      <span class="fld-lbl">${lbl}</span>
+      <input class="fi ed" type="text" value="${fmtDate(val)||''}" placeholder="dd/mm/aaaa"
+        maxlength="10" oninput="fmtDateInput(this)"
+        onchange="${onch}">
+    </div>`;
+  const roInput=(lbl,val,w)=>`
+    <div class="fld" style="min-width:${w}px">
+      <span class="fld-lbl">${lbl}</span>
+      <input class="fi" value="${val}" readonly>
+    </div>`;
+  const edInput=(lbl,val,onch,w,ph)=>`
+    <div class="fld" style="min-width:${w}px">
+      <span class="fld-lbl">${lbl} ★</span>
+      <input class="fi ed" value="${val}" onchange="${onch}" placeholder="${ph||''}">
+    </div>`;
+
+  return `<div class="obra-bar">
+    ${edInput('Propietario',o.propietario||'',`S.obra.propietario=this.value;renderPg();persist()`,160,'Apellido nombre')}
+    ${edInput('Obra',o.obra||'',`S.obra.obra=this.value;renderPg();persist()`,160,'Tipo de obra')}
+    ${edInput('Localidad',o.localidad||'',`S.obra.localidad=this.value;renderPg();persist()`,120,'Ciudad')}
+    ${dateInput('Inicio de obra ★',o.inicio||'',`S.obra.inicio=parseDate(this.value);renderPg();persist()`,130)}
+    <div class="fld" style="min-width:90px">
+      <span class="fld-lbl">Días transcurridos</span>
+      <input class="fi" value="${diasTransc(c)}" readonly>
+    </div>
+    ${dateInput('Fecha de medición ★',c.fecha_medicion||'',`S.certs[${ci}].fecha_medicion=parseDate(this.value);patch(${ci})`,140)}
+    ${dateInput('Fecha de pago ★',c.fecha_pago||'',`S.certs[${ci}].fecha_pago=parseDate(this.value);persist()`,130)}
+    ${roInput('Profesional',`${PROF.nombre} · ${PROF.mp}`,190)}
+    <div class="fld" style="min-width:120px">
+      <span class="fld-lbl">Label certif. ★</span>
+      <input class="fi ed" value="${c.label}"
+        onchange="S.certs[${ci}].label=this.value;renderTabs();persist()">
+    </div>
+    ${(()=>{let la=null;for(let i=ci;i>=0;i--){const l=S.certs[i].act_log;if(l&&l.length){la=l[l.length-1];break;}}
+      return la?`<div class="fld"><span class="fld-lbl">Última actualiz.</span><input class="fi" style="background:#ede9fe;color:#4c1d95;font-weight:700;min-width:160px" value="${la.fecha} · +${la.pct}%" readonly></div>`:'';})()}
+  </div>`;
+}
+
+// ── ACT LOG ───────────────────────────────────────────────
+function buildActLog(c){
+  if(!c.act_log||!c.act_log.length)return'';
+  const ci=S.certs.indexOf(c);
+  const total=c.act_log.reduce((s,e)=>s+parseFloat(e.pct),0).toFixed(2);
+  const entries=c.act_log.map((e,ei)=>{
+    const canRevert=e.snapshot_c&&e.snapshot_mo; // solo si tiene snapshot
+    const revertBtn=canRevert
+      ?`<button class="btn-revert-act no-print" onclick="revertAct(${ci},${ei})"
+          title="Deshacer esta actualización de precios"
+          style="margin-left:4px;background:#7c3aed;color:#fff;border:none;border-radius:3px;padding:1px 6px;font-size:9px;cursor:pointer;font-weight:700">↩ deshacer</button>`
+      :'';
+    return`<span class="act-entry" title="Fecha: ${e.fecha} · Porcentaje: +${e.pct}%">📅 ${e.fecha} &nbsp;+${e.pct}%${revertBtn}</span>`;
+  }).join('');
+  return`<div class="act-log vis">
+    <strong>Actualizaciones de precios aplicadas en este certificado:</strong>
+    ${entries}
+    <span class="no-print" style="margin-left:8px;font-size:10px;color:#581c87">Acumulado: +${total}%</span>
+  </div>`;
+}
+
+// ── RESUMEN ───────────────────────────────────────────────
+function buildResumen(c,ci,t,pagAnt,aPagar,tipo){
+  const mo=tipo==='mo';
+  const pctFisico = t.base>0 ? t.acum/t.base : 0;   // avance físico acumulado de la obra
+  const pctPres   = t.base>0 ? t.pres/t.base : 0;   // avance de ESTE certificado
+  const saldo     = t.base - pagAnt;                // saldo por pagar del contrato
+  return`<div class="resumen">
+    <div class="rc tenue">
+      <div class="rc-lbl">% Físico acumulado</div>
+      <div class="rc-val">${(pctFisico*100).toFixed(1)}%</div>
+    </div>
+    <div class="rc tenue">
+      <div class="rc-lbl">Monto acumulado realizado</div>
+      <div class="rc-val">${fm(t.acum)}</div>
+    </div>
+    <div class="rc tenue">
+      <div class="rc-lbl">Saldo por pagar a la fecha</div>
+      <div class="rc-val" title="Total de obra ${fm(t.base)} − pagado ${fm(pagAnt)}">${fm(saldo)}</div>
+    </div>
+    <div class="rc pagado">
+      <div class="rc-lbl">★ Pagado hasta el momento</div>
+      <input class="pag-inp" type="text" value="${fm(pagAnt)}"
+        onfocus="this.value=(S.certs[${ci}].${mo?'pagado_mo_anterior':'pagado_anterior'}||0).toFixed(2);this.select()"
+        onblur="const v=parsePagado(this.value);S.certs[${ci}].${mo?'pagado_mo_anterior':'pagado_anterior'}=v;this.value=fm(v);patch(${ci})">
+    </div>
+    <div class="rc total">
+      <div class="rc-lbl">Monto a pagar — presente certificado</div>
+      <div class="rc-val">${fm(aPagar)}</div>
+      <div class="rc-pct">Avance de este certificado: <strong>${(pctPres*100).toFixed(1)}%</strong></div>
+    </div>
+  </div>`;
+}
+
+// ── TABLA ─────────────────────────────────────────────────
+function buildTable(c,ci,tipo,rubro){
+  // rubro puede ser {id,label} o string legacy
+  if(typeof rubro==='string') rubro={id:rubro,label:rubro==='gruesa'?'Obra Gruesa':'Obra Fina'};
+  const rubroId=rubro.id, rubroLabel=rubro.label;
+  const ri=S.rubros.findIndex(r=>r.id===rubroId);
+  const colorIdx=(ri<0?0:ri)%2;
+  const isMO   = tipo==='mo';
+  const allItems= isMO?c.items_mo:c.items_c;
+  const items  = allItems.filter(i=>i.grupo===rubroId);
+  const hCls   = isMO?['th-mg','th-mf'][colorIdx]:['th-cg','th-cf'][colorIdx];
+  const rCls   = isMO?['rmg','rmf'][colorIdx]:['rg','rf'][colorIdx];
+  const lbl    = items.length>0
+    ?`${rubroLabel.toUpperCase()} — ítems ${items[0].n} a ${items[items.length-1].n}`
+    :`${rubroLabel.toUpperCase()} — sin ítems`;
+  const tLbl   = isMO?'MANO DE OBRA':'CLIENTE';
+
+  // ── Tabla vacía: solo encabezado + botón agregar ────────
+  if(items.length===0){
+    return`<div class="tblock no-print">
+      <div class="th-strip ${hCls}" style="opacity:.55;cursor:default">
+        ■ ${lbl}
+        <span class="th-tipo">${tLbl}</span>
+        <button class="btn-rubro-edit no-print" onclick="editRubroLabel('${rubroId}')"
+          style="margin-left:8px;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:3px;padding:1px 6px;font-size:9px;cursor:pointer">✏ renombrar</button>
+        <button class="btn-rubro-del no-print" onclick="deleteRubro('${rubroId}')"
+          style="margin-left:4px;background:rgba(220,53,69,.5);color:#fff;border:none;border-radius:3px;padding:1px 6px;font-size:9px;cursor:pointer">🗑 eliminar rubro</button>
+      </div>
+      <div class="no-print" style="padding:4px 8px 6px">
+        <button class="btn-add-item" onclick="openAddItem('${rubroId}',${ci})">＋ Agregar ítem — ${rubroLabel}</button>
+      </div>
+    </div>`;
+  }
+
+  // ¿ya se aplicó alguna actualización de precios en la obra?
+  const hasUpd = S.certs.some(c=>c.act_log&&c.act_log.length>0);
+
+  const rows=items.map(it=>{
+    const done=it.pct_acum>=0.9999;
+    const cls =done?'rd':rCls;
+    const mP  =it.importe_actual*it.pct_pres;
+    const mA  =it.importe_actual*it.pct_acum;
+    const mAnt=it.importe_actual*it.pct_ant;
+    const ib  =it.importe_base!=null?it.importe_base:it.importe_actual;
+    const vigente=it.importe_actual;
+    const actualizado = Math.abs(vigente-ib)>0.01;
+
+    // Columna Importe Base
+    const impBaseHtml = hasUpd
+      ?`<input class="imp-base-locked" type="text" value="${fm(ib)}" readonly
+          title="Importe base original: ${fm(ib)}&#10;Bloqueado: se aplicaron actualizaciones de precio"
+          onclick="alert('El importe base ya no es editable.\\nSe han aplicado actualizaciones de precio.')">`
+      :`<input class="imp-inp" type="number" min="0" step="0.01"
+          value="${ib.toFixed(2)}"
+          onchange="setImporteBase('${tipo}',${ci},${it.n},this.value)"
+          title="Importe base del contrato (editable hasta la 1ª actualización)">`;
+
+    // Columna Importe Vigente
+    const impVigHtml = actualizado
+      ?`<span class="vp" style="display:block;text-align:right;font-family:var(--mono);font-size:10.5px">${fm(vigente)}</span>`
+      :`<span class="va" style="display:block;text-align:right;font-family:var(--mono);font-size:10.5px">${fm(vigente)}</span>`;
+
+    // ¿se cargó avance NUEVO en este certificado? (pct_pres > 0 o pct_acum > pct_ant)
+    const hasPres = it.pct_pres > 0.0001 || (it.pct_acum - it.pct_ant) > 0.0001;
+    let piHtml;
+    if(done){
+      const revertBtn = hasPres
+        ? `<button onclick="resetPct('${tipo}',${ci},${it.n})" title="Deshacer avance de este certificado"
+             style="background:#7c3aed;color:#fff;border:none;border-radius:3px;padding:1px 5px;font-size:9px;cursor:pointer;font-weight:700;white-space:nowrap">↩</button>`
+        : '';
+      piHtml=`<span class="no-print" style="display:flex;align-items:center;gap:3px;justify-content:center">
+        <input class="pi" type="number" value="0" disabled style="width:44px">
+        ${revertBtn}
+      </span>
+      <span class="yes-print" style="display:none;text-align:center;font-weight:700">${hasPres?'100.0%':'—'}</span>`;
+    } else if(isMO && !it.desl_mo){
+      piHtml=`<input class="pi" type="number" value="${Math.round(it.pct_pres*100)}" disabled
+        style="background:#e8f4e8;border-color:#4a8a4a;color:#1a4a1a"
+        title="Sincronizado con planilla cliente">`;
+    } else {
+      piHtml=`<input class="pi" type="number" min="0" max="100" step="1"
+        value="${Math.round(it.pct_pres*100)}"
+        onchange="setPct('${tipo}',${ci},${it.n},this.value)">`;
+    }
+
+    const ckHtml = isMO
+      ?`<td class="c-ck no-print-col"><input type="checkbox" class="ck-desl"
+          ${it.desl_mo?'checked':''}
+          onchange="toggleDesl(${ci},${it.n},this.checked)"
+          title="Marcar para editar % independiente"></td>`
+      :'';
+
+    const idxInRubro=items.indexOf(it);
+    const isFirst=idxInRubro===0, isLast=idxInRubro===items.length-1;
+    return`<tr class="${cls}">
+      <td class="c-n">${it.n}</td>
+      <td class="c-d"><input class="desc-inp" type="text" value="${it.desc.replace(/"/g,'&quot;')}"
+        onchange="setDesc(${it.n},this.value)" title="Editar descripción"></td>
+      <td class="c-i no-print-col"><input class="incid-inp" type="number" min="0" max="100" step="0.01"
+        value="${(it.incid*100).toFixed(2)}"
+        onchange="setIncid('${tipo}',${ci},${it.n},this.value)">%</td>
+      <td class="c-ib no-print-col">${impBaseHtml}</td>
+      <td class="c-m">${impVigHtml}</td>
+      <td class="c-m"><span class="va">${mAnt>0?fm(mAnt):'—'}</span></td>
+      <td class="c-a"><span class="va">${fp(it.pct_ant)}</span></td>
+      ${ckHtml}
+      <td class="c-p">${piHtml}</td>
+      <td class="c-m"><span class="vp${mP>0?'':' vz'}">${mP>0?fm(mP):'—'}</span></td>
+      <td class="c-a"><span class="ba${done?' bd':''}">${fp(it.pct_acum)}</span></td>
+      <td class="c-m"><span class="${mA>0?'vm':'va'}">${mA>0?fm(mA):'—'}</span></td>
+      <td class="c-act no-print" style="white-space:nowrap">
+        <button onclick="moveItem(${it.n},-1)" title="Subir" ${isFirst?'disabled':''} style="background:none;border:none;cursor:pointer;opacity:${isFirst?.25:1};padding:0 2px;font-size:11px">↑</button>
+        <button onclick="moveItem(${it.n},+1)" title="Bajar" ${isLast?'disabled':''} style="background:none;border:none;cursor:pointer;opacity:${isLast?.25:1};padding:0 2px;font-size:11px">↓</button>
+        <button class="btn-del" onclick="deleteItem(${it.n})" title="Eliminar ítem ${it.n}">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const t=items.reduce((a,it)=>({
+    sumBase:a.sumBase+(it.importe_base||it.importe_actual),
+    sumVig: a.sumVig+it.importe_actual,
+    ant:    a.ant+it.importe_actual*it.pct_ant,
+    pres:   a.pres+it.importe_actual*it.pct_pres,
+    acum:   a.acum+it.importe_actual*it.pct_acum,
+  }),{sumBase:0,sumVig:0,ant:0,pres:0,acum:0});
+
+  return`<div class="tblock">
+    <div class="th-strip ${hCls}">■ ${lbl}
+      <button class="btn-rubro-edit no-print" onclick="editRubroLabel('${rubroId}')"
+        style="margin-left:8px;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:3px;padding:1px 6px;font-size:9px;cursor:pointer">✏ renombrar</button>
+      <span class="th-tipo">${tLbl}</span>
+    </div>
+    <table>
+      <colgroup>
+        <col style="width:26px"><col style="min-width:200px">
+        <col style="width:44px">
+        <col style="width:86px"><col style="width:86px">
+        <col style="width:86px"><col style="width:50px">
+        ${isMO?'<col style="width:42px">':''}
+        <col style="width:58px"><col style="width:86px">
+        <col style="width:50px"><col style="width:86px">
+        <col style="width:20px">
+      </colgroup>
+      <thead><tr>
+        <th class="l">Nº</th><th class="l">Descripción</th>
+        <th class="no-print-col">Incid.</th>
+        <th class="no-print-col" title="Precio original del contrato">I. Base $</th>
+        <th title="Precio vigente tras actualizaciones">I. Vigente $</th>
+        <th>Mto. ant. $</th><th>% ant.</th>
+        ${isMO?`<th class="c-ck no-print-col" title="Desligar % MO">Desl.</th>`:''}
+        <th>★ % pres.</th><th>Mto. pres. $</th>
+        <th>% acum.</th><th>Mto. acum. $</th>
+        <th class="no-print"></th>
+      </tr></thead>
+      <tbody>
+        ${rows}
+        <tr class="tr-tot">
+          <td colspan="2" style="text-align:left">TOTALES</td>
+          <td class="no-print-col"></td>
+          <td class="c-m no-print-col">${fm(t.sumBase)}</td>
+          <td class="c-m">${fm(t.sumVig)}</td>
+          <td class="c-m">${fm(t.ant)}</td>
+          <td></td>
+          ${isMO?'<td class="no-print-col"></td>':''}
+          <td></td>
+          <td class="c-m" style="color:var(--acc)">${fm(t.pres)}</td>
+          <td></td>
+          <td class="c-m" style="color:var(--acc)">${fm(t.acum)}</td>
+          <td class="no-print"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="no-print" style="padding:4px 8px 6px">
+      <button class="btn-add-item" onclick="openAddItem('${rubroId}',${ci})">＋ Agregar ítem — ${rubroLabel}</button>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// ACCIONES
+// ══════════════════════════════════════════════════════════
+function sw(i){S.active=i;render();}
+
+function newCert(){
+  const prev=S.certs[S.certs.length-1];
+  S.certs.push(makeCert(S.certs.length+1,prev));
+  S.active=S.certs.length-1;
+  render();
+}
+
+function delC(i,e){
+  e.stopPropagation();
+  if(S.certs.length<=1)return;
+  if(!confirm(`¿Eliminar "${S.certs[i].label}"?`))return;
+  S.certs.splice(i,1);
+  S.active=Math.min(S.active,S.certs.length-1);
+  render();
+}
+
+function setPct(tipo,ci,n,val){
+  const pct=Math.min(100,Math.max(0,parseFloat(val)||0))/100;
+  const it=(tipo==='c'?S.certs[ci].items_c:S.certs[ci].items_mo).find(x=>x.n===n);
+  if(!it)return;
+  it.pct_pres=Math.min(pct,1-it.pct_ant);
+  it.pct_acum=it.pct_ant+it.pct_pres;
+  // Si es cliente, sincronizar MO si no está desligado
+  if(tipo==='c'){
+    const itMO=S.certs[ci].items_mo.find(x=>x.n===n);
+    if(itMO&&!itMO.desl_mo){
+      itMO.pct_pres=it.pct_pres;
+      itMO.pct_acum=itMO.pct_ant+itMO.pct_pres;
+    }
+  }
+  patch(ci);
+}
+
+function resetPct(tipo,ci,n){
+  const it=(tipo==='c'?S.certs[ci].items_c:S.certs[ci].items_mo).find(x=>x.n===n);
+  if(!it)return;
+  const pctPres=Math.round(it.pct_pres*100);
+  const pctAnt =Math.round(it.pct_ant*100);
+  if(!confirm(`¿Revertir ítem ${n}?\nSe eliminará el ${pctPres}% cargado en este certificado.\nEl ítem volverá al ${pctAnt}% acumulado anterior.`))return;
+  it.pct_pres=0;
+  it.pct_acum=it.pct_ant;
+  // Sincronizar MO si corresponde
+  if(tipo==='c'){
+    const itMO=S.certs[ci].items_mo.find(x=>x.n===n);
+    if(itMO&&!itMO.desl_mo){itMO.pct_pres=0;itMO.pct_acum=itMO.pct_ant;}
+  }
+  render();
+}
+
+function toggleDesl(ci,n,checked){
+  const itMO=S.certs[ci].items_mo.find(x=>x.n===n);
+  if(!itMO)return;
+  itMO.desl_mo=checked;
+  if(!checked){
+    // volver a sincronizar con cliente
+    const itC=S.certs[ci].items_c.find(x=>x.n===n);
+    if(itC){itMO.pct_pres=itC.pct_pres;itMO.pct_acum=itMO.pct_ant+itMO.pct_pres;}
+  }
+  patch(ci);
+}
+
+// ── Actualización ──────────────────────────────────────────
+function openActModal(){document.getElementById('ovAct').classList.add('open');}
+function closeAct(){document.getElementById('ovAct').classList.remove('open');}
+function applyAct(){
+  const pct=parseFloat(document.getElementById('actPct').value)||0;
+  if(pct<=0){alert('Ingresá un porcentaje mayor a 0.');return;}
+  const f=1+pct/100;
+  const c=S.certs[S.active];
+  const hoy=document.getElementById('actFecha').value||new Date().toLocaleDateString('es-AR');
+
+  ['items_c','items_mo'].forEach(k=>{
+    c[k].forEach(it=>{
+      if(it.pct_acum>=0.9999)return; // ítem completo — no tocar
+      const imp=it.importe_actual;
+      // Montos en $ ya certificados (quedan CONGELADOS)
+      const pagoAnt  = imp*it.pct_ant;
+      const pagoPres = imp*it.pct_pres;
+      const pagoTotal= imp*it.pct_acum;
+      // Pendiente se actualiza con el factor
+      const nuevoTotal = pagoTotal + imp*(1-it.pct_acum)*f;
+      it.importe_actual = nuevoTotal;
+      // Recalcular % para que los montos en $ queden igual
+      if(nuevoTotal>0){
+        it.pct_ant  = pagoAnt  / nuevoTotal;
+        it.pct_pres = pagoPres / nuevoTotal;
+        it.pct_acum = pagoTotal/ nuevoTotal;
+      }
+    });
+  });
+
+  if(!c.act_log)c.act_log=[];
+  // Guardar snapshot para poder deshacer
+  const snap=k=>c[k].map(it=>({
+    n:it.n,importe_actual:it.importe_actual,
+    pct_ant:it.pct_ant,pct_pres:it.pct_pres,pct_acum:it.pct_acum
+  }));
+  c.act_log.push({fecha:hoy, pct:pct.toFixed(2), snapshot_c:snap('items_c'), snapshot_mo:snap('items_mo')});
+  closeAct();render();
+}
+
+function revertAct(ci,ei){
+  const c=S.certs[ci];
+  const entry=c.act_log[ei];
+  if(!entry||!entry.snapshot_c||!entry.snapshot_mo){
+    alert('Esta actualización no tiene datos guardados para deshacer.');return;
+  }
+  if(!confirm(`¿Deshacer la actualización del ${entry.fecha} (+${entry.pct}%)?\nSe restaurarán todos los importes y porcentajes anteriores.`))return;
+  // Restaurar desde snapshot
+  ['items_c','items_mo'].forEach(k=>{
+    const snapKey=k==='items_c'?'snapshot_c':'snapshot_mo';
+    entry[snapKey].forEach(sn=>{
+      const it=c[k].find(x=>x.n===sn.n);
+      if(!it)return;
+      it.importe_actual=sn.importe_actual;
+      it.pct_ant=sn.pct_ant;
+      it.pct_pres=sn.pct_pres;
+      it.pct_acum=sn.pct_acum;
+    });
+  });
+  c.act_log.splice(ei,1);
+  render();
+}
+
+// setImporte ya no se usa directamente desde la tabla; se mantiene para compatibilidad
+function setImporte(tipo,ci,n,val){
+  const v=Math.max(0,parseFloat(val)||0);
+  const it=(tipo==='c'?S.certs[ci].items_c:S.certs[ci].items_mo).find(x=>x.n===n);
+  if(!it)return;
+  it.importe_actual=v;
+  patch(ci);
+}
+
+// Edición del importe base (solo mientras no haya actualizaciones en toda la obra)
+function setImporteBase(tipo,ci,n,val){
+  if(S.certs.some(c=>c.act_log&&c.act_log.length>0)){
+    alert('El importe base ya no es editable.\nSe han aplicado actualizaciones de precio a esta obra.');
+    patch(ci); return;
+  }
+  const v=Math.max(0,parseFloat(val)||0);
+  // Actualiza base Y vigente en todos los certificados (precio base es único para toda la obra)
+  S.certs.forEach(c=>{
+    const itC=c.items_c.find(x=>x.n===n);
+    const itMO=c.items_mo.find(x=>x.n===n);
+    if(tipo==='c'&&itC){itC.importe_base=v;itC.importe_actual=v;}
+    if(tipo==='mo'&&itMO){itMO.importe_base=v;itMO.importe_actual=v;}
+  });
+  patch(ci);
+}
+
+function setDesc(n,val){
+  S.certs.forEach(c=>{
+    [c.items_c,c.items_mo].forEach(arr=>{
+      const it=arr.find(x=>x.n===n);
+      if(it)it.desc=val;
+    });
+  });
+  persist();
+}
+
+function setIncid(tipo,ci,n,val){
+  const pct=Math.max(0,Math.min(100,parseFloat(val)||0))/100;
+  const it=(tipo==='c'?S.certs[ci].items_c:S.certs[ci].items_mo).find(x=>x.n===n);
+  if(!it)return;
+  it.incid=pct;
+  persist();
+}
+
+function renumberItems(c){
+  const rubros=(S&&S.rubros)||[{id:'gruesa'},{id:'fina'}];
+  ['items_c','items_mo'].forEach(k=>{
+    let n=0;const ordered=[];
+    rubros.forEach(r=>{
+      const grp=c[k].filter(x=>x.grupo===r.id);
+      grp.forEach(it=>{it.n=++n;});
+      ordered.push(...grp);
+    });
+    // Items en rubros desconocidos van al final
+    const extra=c[k].filter(x=>!rubros.some(r=>r.id===x.grupo));
+    extra.forEach(it=>{it.n=++n;});
+    c[k]=[...ordered,...extra];
+  });
+}
+
+function moveItem(n,dir){
+  // dir: -1=subir, +1=bajar. Mueve dentro del mismo rubro en todos los certs.
+  const sample=S.certs[0].items_c.find(x=>x.n===n);
+  if(!sample)return;
+  const rubroId=sample.grupo;
+  ['items_c','items_mo'].forEach(k=>{
+    S.certs.forEach(c=>{
+      const arr=c[k];
+      const idx=arr.findIndex(x=>x.n===n);
+      if(idx<0)return;
+      const swapIdx=idx+dir;
+      if(swapIdx<0||swapIdx>=arr.length)return;
+      if(arr[swapIdx].grupo!==rubroId)return; // no cruzar rubros
+      [arr[idx],arr[swapIdx]]=[arr[swapIdx],arr[idx]];
+    });
+  });
+  S.certs.forEach(c=>renumberItems(c));
+  render();
+}
+
+function deleteItem(n){
+  const sample=S.certs[0].items_c.find(x=>x.n===n);
+  if(!sample)return;
+  const desc=sample.desc.length>50?sample.desc.slice(0,50)+'…':sample.desc;
+  if(!confirm(`¿Eliminar ítem ${n}?\n"${desc}"\n\nSe eliminará de TODOS los certificados.`))return;
+  S.certs.forEach(c=>{
+    c.items_c=c.items_c.filter(x=>x.n!==n);
+    c.items_mo=c.items_mo.filter(x=>x.n!==n);
+    renumberItems(c);
+  });
+  render();
+}
+
+// ── Agregar ítem ──────────────────────────────────────────
+let _addGrupo='gruesa',_addCi=0;
+function openAddItem(grupo,ci){
+  _addGrupo=grupo;_addCi=ci;
+  document.getElementById('aiDesc').value='';
+  document.getElementById('aiImpC').value='';
+  document.getElementById('aiImpMO').value='';
+  document.getElementById('aiIncid').value='';
+  document.getElementById('ovAddItem').classList.add('open');
+}
+function closeAddItem(){document.getElementById('ovAddItem').classList.remove('open');}
+function doAddItem(){
+  const desc=document.getElementById('aiDesc').value.trim();
+  if(!desc){alert('La descripción es obligatoria');return;}
+  const impC=parseFloat(document.getElementById('aiImpC').value)||0;
+  const impMO=parseFloat(document.getElementById('aiImpMO').value)||0;
+  const incid=parseFloat(document.getElementById('aiIncid').value)/100||0;
+  const rubros=S.rubros||[{id:'gruesa'},{id:'fina'}];
+  const ri=rubros.findIndex(r=>r.id===_addGrupo);
+  S.certs.forEach(c=>{
+    // Calcular posición de inserción: después del último ítem de este rubro
+    const insertAt=(items)=>{
+      let pos=0;
+      for(let i=0;i<=ri&&i<rubros.length;i++){
+        const grp=items.filter(x=>x.grupo===rubros[i].id);
+        if(i<ri) pos+=grp.length; else pos+=grp.length; // al final de este rubro
+      }
+      return pos;
+    };
+    const mkIt=(imp)=>({n:0,desc,incid,grupo:_addGrupo,importe_actual:imp,importe_base:imp,pct_ant:0,pct_pres:0,pct_acum:0,desl_mo:false});
+    c.items_c.splice(insertAt(c.items_c),0,mkIt(impC));
+    c.items_mo.splice(insertAt(c.items_mo),0,mkIt(impMO));
+    renumberItems(c);
+  });
+  closeAddItem();
+  render();
+}
+
+// ── Gestión de rubros ──────────────────────────────────────
+function editRubroLabel(id){
+  const rubro=S.rubros.find(r=>r.id===id);
+  if(!rubro)return;
+  const nuevo=prompt(`Renombrar rubro "${rubro.label}":`,rubro.label);
+  if(nuevo===null)return;
+  const limpio=nuevo.trim();
+  if(!limpio){alert('El nombre no puede estar vacío.');return;}
+  rubro.label=limpio;
+  render();
+}
+
+function deleteRubro(id){
+  const rubro=S.rubros.find(r=>r.id===id);
+  if(!rubro)return;
+  // Verificar que no tenga ítems en ningún cert
+  const tieneItems=S.certs.some(c=>
+    c.items_c.some(x=>x.grupo===id)||c.items_mo.some(x=>x.grupo===id));
+  if(tieneItems){
+    alert(`El rubro "${rubro.label}" todavía tiene ítems.\nEliminar los ítems primero y luego intentar de nuevo.`);
+    return;
+  }
+  if(!confirm(`¿Eliminar el rubro "${rubro.label}"?\nNo podrá recuperarse.`))return;
+  S.rubros=S.rubros.filter(r=>r.id!==id);
+  render();
+}
+
+function openAddRubro(){document.getElementById('ovAddRubro').classList.add('open');}
+function closeAddRubro(){document.getElementById('ovAddRubro').classList.remove('open');}
+function doAddRubro(){
+  const label=document.getElementById('arLabel').value.trim();
+  if(!label){alert('El nombre del rubro es obligatorio.');return;}
+  // Generar id único desde el label
+  const id='rubro_'+label.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now();
+  S.rubros.push({id,label});
+  closeAddRubro();
+  render();
+}
+
+// ── PDF ────────────────────────────────────────────────────
+function pdfCliente(){
+  document.body.classList.remove('pdf-mo');
+  document.body.classList.add('pdf-cliente');
+  showPrintTip();
+  setTimeout(()=>{window.print();document.body.classList.remove('pdf-cliente');hidePrintTip();},200);
+}
+function pdfMO(){
+  document.body.classList.remove('pdf-cliente');
+  document.body.classList.add('pdf-mo');
+  showPrintTip();
+  setTimeout(()=>{window.print();document.body.classList.remove('pdf-mo');hidePrintTip();},200);
+}
+function showPrintTip(){
+  let t=document.getElementById('printTip');
+  if(!t){
+    t=document.createElement('div');t.id='printTip';
+    t.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:9999;background:#1e293b;color:#fff;padding:8px 18px;border-radius:8px;font-size:12px;font-family:sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap;';
+    t.innerHTML='💡 Chrome agrega automáticamente su propia fecha/hora y ruta del archivo. Para quitarlos, desmarcar <strong>«Encabezados y pies de página»</strong> en el diálogo. El encabezado y pie del certificado (<em>propietario, firma</em>) son parte del documento y siempre aparecen.';
+    document.body.appendChild(t);
+  }
+  t.style.display='block';
+}
+function hidePrintTip(){
+  const t=document.getElementById('printTip');if(t)t.style.display='none';
+}
+
+// ── Guardar ───────────────────────────────────────────────
+function getHTML(){
+  const src='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  const decl='const SAVED'+'_STATE = ', marca='// <<SAVED'+'_STATE>>';
+  const i=src.indexOf(decl), k=src.indexOf(marca,i);
+  if(i<0||k<0){alert('No se encontró el marcador de datos en el archivo.');return null;}
+  const datos=JSON.stringify(S).replace(/<\/script/gi,'<\\/script');
+  return src.slice(0,i)+decl+datos+'; '+src.slice(k);
+}
+function guardar(){
+  persist();
+  if(DRIVE_URL){
+    clearTimeout(_driveTimer);_driveTimer=null;
+    driveSyncAhora(S,true).then(ok=>toast(ok?'💾 Guardado en el navegador y en Drive':'💾 Guardado en el navegador · ⚠️ Drive no respondió, reintenta al próximo cambio'));
+  }else toast('💾 Guardado en este navegador');
+}
+function openSaveAs(){
+  document.getElementById('saName').value=`ObraCertif_${(S.obra.propietario||'NuevaObra').replace(/\s+/g,'_')}`;
+  document.getElementById('ovSaveAs').classList.add('open');
+}
+function closeSaveAs(){document.getElementById('ovSaveAs').classList.remove('open');}
+function doSaveAs(){
+  let name=document.getElementById('saName').value.trim()||'ObraCertif_Nueva';
+  if(!name.endsWith('.html'))name+='.html';
+  const html=getHTML();if(!html)return;
+  dl(html,name);
+  closeSaveAs();
+}
+function dl(content,filename){
+  const b=new Blob([content],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download=filename;a.click();
+}
+
+// ── JSON ──────────────────────────────────────────────────
+function exportJSON(){
+  const c=S.certs[S.active];
+  const b=new Blob([JSON.stringify({obra:S.obra,certificado:c},null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download=`certif_${c.id}_${(S.obra.propietario||'obra').replace(/\s+/g,'_').toLowerCase()}.json`;
+  a.click();
+}
+
+
+// ══════════════════════════════════════════════════════════
+// OBRAS — varias obras en el mismo navegador + respaldo en Drive
+// ══════════════════════════════════════════════════════════
+const DB_KEY='obracertif_v5';
+let DB=null, _bootDone=false;
+
+function _hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36);}
+function _nuevoId(){return 'oc_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function _idDesde(o){const p=(o.obra&&o.obra.propietario)||'',n=(o.obra&&o.obra.obra)||'';return (p||n)?'oc_h'+_hash((p+'|'+n).toLowerCase().trim()):_nuevoId();}
+function nombreObra(o){const x=(o&&o.obra)||{};return [x.propietario,x.obra].filter(Boolean).join(' — ')||'Obra sin nombre';}
+
+function _normObra(o){
+  if(!o.obra)o.obra={propietario:'',obra:'',localidad:'',inicio:''};
+  if(!o.id)o.id=_idDesde(o);
+  if(!o.rubros)o.rubros=[{id:'gruesa',label:'Obra Gruesa'},{id:'fina',label:'Obra Fina'}];
+  if(!Array.isArray(o.certs)||!o.certs.length)o.certs=[makeCert(1,null)];
+  if(o.active==null||o.active<0||o.active>=o.certs.length)o.active=o.certs.length-1;
+  return o;
+}
+function _obraVacia(){
+  return _normObra({id:_nuevoId(),obra:{propietario:'',obra:'',localidad:'',inicio:''},certs:[makeCert(1,null)],active:0});
+}
+
+function initS(){
+  try{const r=localStorage.getItem(DB_KEY)||localStorage.getItem(DB_KEY+'_bak');if(r)DB=JSON.parse(r);}catch(e){DB=null;}
+  if(!DB||!DB.obras){
+    DB={v:5,activa:null,obras:{}};
+    try{const r=localStorage.getItem('obracertif_v4');if(r){const o=_normObra(JSON.parse(r));DB.obras[o.id]=o;DB.activa=o.id;}}catch(e){}
+  }
+  if(SAVED_STATE){
+    const o=_normObra(JSON.parse(JSON.stringify(SAVED_STATE)));
+    if(!DB.obras[o.id])DB.obras[o.id]=o;
+    DB.activa=o.id;
+  }
+  if(!DB.activa||!DB.obras[DB.activa]){
+    const ids=Object.keys(DB.obras);
+    if(ids.length)DB.activa=ids[0];
+    else{const o=_obraVacia();DB.obras[o.id]=o;DB.activa=o.id;}
+  }
+  S=_normObra(DB.obras[DB.activa]);
+}
+
+function _grabarLocal(){
+  try{
+    const prev=localStorage.getItem(DB_KEY);
+    if(prev)localStorage.setItem(DB_KEY+'_bak',prev);
+    localStorage.setItem(DB_KEY,JSON.stringify(DB));
+  }catch(e){toast('⚠️ No se pudo guardar en este navegador');}
+}
+function persist(){
+  if(_bootDone)S.actualizado=new Date().toISOString();
+  DB.obras[S.id]=S;DB.activa=S.id;
+  _grabarLocal();
+  actualizarObraLbl();
+  if(_bootDone)driveProgramar();
+}
+
+function actualizarObraLbl(){
+  const el=document.getElementById('obraActivaLbl');
+  if(el)el.textContent=nombreObra(S);
+}
+
+function toast(msg,ms){
+  let t=document.getElementById('ocToast');
+  if(!t){t=document.createElement('div');t.id='ocToast';t.className='oc-toast';document.body.appendChild(t);}
+  t.innerHTML=msg;t.classList.add('vis');
+  clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('vis'),ms||(msg.includes('<button')?12000:3200));
+}
+
+// ── Cambiar / crear / borrar obras ─────────────────────────
+function abrirObra(id){
+  if(!DB.obras[id])return;
+  if(_driveTimer&&DRIVE_URL){clearTimeout(_driveTimer);driveSyncAhora(S);}
+  S=_normObra(DB.obras[id]);DB.activa=id;
+  _grabarLocal();
+  closeObras();render();
+  toast('🏗 '+nombreObra(S));
+}
+function nuevaObra(){
+  const o=_obraVacia();
+  DB.obras[o.id]=o;
+  abrirObra(o.id);
+  toast('＋ Obra nueva — completá propietario y obra arriba');
+}
+function borrarObra(id){
+  const o=DB.obras[id];if(!o)return;
+  const extra=DRIVE_URL?'\n\nLa copia en Google Drive NO se borra: la podés volver a traer.':'\n\nNo hay respaldo en Drive configurado: se pierde definitivamente.';
+  if(!confirm(`¿Quitar "${nombreObra(o)}" de este navegador?${extra}`))return;
+  delete DB.obras[id];
+  if(DB.activa===id){
+    const ids=Object.keys(DB.obras);
+    if(!ids.length){const n=_obraVacia();DB.obras[n.id]=n;ids.push(n.id);}
+    S=_normObra(DB.obras[ids[0]]);DB.activa=S.id;
+    render();
+  }
+  _grabarLocal();
+  renderObras();
+}
+
+// ── Modal de obras ─────────────────────────────────────────
+function openObras(){
+  renderObras();
+  document.getElementById('obrasVers').innerHTML='';
+  document.getElementById('ovObras').classList.add('open');
+  cargarDriveEnModal();
+}
+function closeObras(){document.getElementById('ovObras').classList.remove('open');}
+
+function _fechaCorta(iso){
+  if(!iso)return'—';
+  const d=new Date(iso);if(isNaN(d))return'—';
+  return d.toLocaleDateString('es-AR')+' '+d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderObras(){
+  const lista=Object.values(DB.obras).sort((a,b)=>(b.actualizado||'').localeCompare(a.actualizado||''));
+  document.getElementById('obrasLista').innerHTML=lista.map(o=>{
+    const ult=o.certs[o.certs.length-1];
+    const act=o.id===S.id;
+    return`<div class="obra-item${act?' act':''}">
+      <div class="obra-info">
+        <div class="obra-nom">${act?'● ':''}${nombreObra(o)}</div>
+        <div class="obra-meta">${o.certs.length} certificado${o.certs.length===1?'':'s'} · último: ${ult?ult.label:'—'} · modificada ${_fechaCorta(o.actualizado)}</div>
+      </div>
+      <div class="obra-btns">
+        ${act?'<span class="obra-abierta">abierta</span>':`<button class="btn btn-saveas" onclick="abrirObra('${o.id}')">Abrir</button>`}
+        ${DRIVE_URL?`<button class="btn btn-ghost" onclick="verVersiones('${o.id}')" title="Versiones guardadas en Drive">🕘</button>`:''}
+        <button class="btn btn-ghost" onclick="exportarObra('${o.id}')" title="Descargar respaldo .json de esta obra">⤓</button>
+        <button class="btn btn-ghost btn-ghost-red" onclick="borrarObra('${o.id}')" title="Quitar de este navegador">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Respaldos en archivo ───────────────────────────────────
+function _descargar(texto,nombre,tipo){
+  const b=new Blob([texto],{type:tipo||'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download=nombre;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function _nombreArchivo(s){return String(s).replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_');}
+function exportarObra(id){
+  const o=DB.obras[id];if(!o)return;
+  _descargar(JSON.stringify(o,null,1),`ObraCertif_${_nombreArchivo(nombreObra(o))}.json`);
+}
+function exportarTodo(){
+  const hoy=new Date().toISOString().slice(0,10);
+  _descargar(JSON.stringify(DB,null,1),`ObraCertif_respaldo_total_${hoy}.json`);
+}
+
+// Saca el estado embebido de un HTML guardado con la versión anterior de la app.
+// Si hay más de uno (archivo guardado varias veces), se queda con el que tiene más certificados.
+function _extraerEstadosHTML(src){
+  const key='const SAVED_STATE = ',out=[];
+  let i=0;
+  while((i=src.indexOf(key,i))!==-1){
+    let j=i+key.length;
+    if(src[j]==='{'){
+      let depth=0,inStr=false,esc=false,k=j;
+      for(;k<src.length;k++){
+        const ch=src[k];
+        if(inStr){if(esc)esc=false;else if(ch==='\\')esc=true;else if(ch==='"')inStr=false;continue;}
+        if(ch==='"')inStr=true;
+        else if(ch==='{')depth++;
+        else if(ch==='}'){depth--;if(depth===0)break;}
+      }
+      try{const o=JSON.parse(src.slice(j,k+1));if(o&&Array.isArray(o.certs))out.push(o);}catch(e){}
+      i=k;
+    }else i=j;
+  }
+  return out;
+}
+
+function _incorporar(o){
+  o=_normObra(o);
+  const ya=DB.obras[o.id];
+  if(ya){
+    const msg=`"${nombreObra(o)}" ya existe en este navegador.\n\nEn el navegador: ${ya.certs.length} certificados (último: ${ya.certs[ya.certs.length-1].label}).\nEn el archivo: ${o.certs.length} certificados (último: ${o.certs[o.certs.length-1].label}).\n\n¿Reemplazar por la del archivo?`;
+    if(!confirm(msg))return false;
+  }
+  if(!o.actualizado)o.actualizado=new Date().toISOString();
+  DB.obras[o.id]=o;
+  return true;
+}
+
+function importarArchivo(inp){
+  const f=inp.files&&inp.files[0];inp.value='';
+  if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const txt=String(rd.result||'');
+    let obras=[];
+    try{
+      if(/\.json$/i.test(f.name)||/^\s*[\[{]/.test(txt)){
+        const j=JSON.parse(txt);
+        if(j&&j.obras&&typeof j.obras==='object')obras=Object.values(j.obras);
+        else if(j&&Array.isArray(j.certs))obras=[j];
+        else if(j&&j.certificado){alert('Ese JSON es de UN solo certificado (botón "↓ JSON"), no de una obra completa.\nUsá un respaldo de obra (⤓) o el HTML guardado.');return;}
+      }else{
+        const est=_extraerEstadosHTML(txt);
+        if(est.length)obras=[est.reduce((a,b)=>b.certs.length>=a.certs.length?b:a)];
+      }
+    }catch(e){alert('No se pudo leer el archivo: '+e.message);return;}
+    if(!obras.length){alert('El archivo no contiene datos de obras de ObraCertif.');return;}
+    let n=0,ultima=null;
+    obras.forEach(o=>{if(_incorporar(o)){n++;ultima=o.id;}});
+    if(!n)return;
+    _grabarLocal();
+    if(ultima){S=_normObra(DB.obras[ultima]);DB.activa=ultima;render();}
+    renderObras();
+    if(DRIVE_URL)obras.forEach(o=>DB.obras[o.id]&&driveSyncAhora(DB.obras[o.id],true));
+    toast(`✅ ${n} obra${n===1?'':'s'} importada${n===1?'':'s'}`);
+  };
+  rd.readAsText(f);
+}
+
+// ══════════════════════════════════════════════════════════
+// GOOGLE DRIVE (Apps Script)
+// ══════════════════════════════════════════════════════════
+const DRIVE_URL = '';
+const DRIVE_SECRET = 'obracertif-66c3420b5d0ac65b89f33d17';
+
+let _driveStatus='idle', _driveTimer=null;
+
+function actualizarIndicadorDrive(){
+  const el=document.getElementById('driveIndicator');
+  if(!el)return;
+  if(!DRIVE_URL){el.style.display='none';return;}
+  el.style.display='inline-flex';
+  el.className='drive-ind '+_driveStatus;
+  const txt={idle:'☁ Drive',pending:'☁ cambios…',saving:'☁ guardando…',saved:'☁ guardado',error:'☁ sin conexión'};
+  el.textContent=txt[_driveStatus]||'☁ Drive';
+}
+
+function driveProgramar(){
+  if(!DRIVE_URL)return;
+  _driveStatus='pending';actualizarIndicadorDrive();
+  clearTimeout(_driveTimer);
+  _driveTimer=setTimeout(()=>{_driveTimer=null;driveSyncAhora(S);},4000);
+}
+
+async function _drivePost(body){
+  const r=await fetch(DRIVE_URL,{method:'POST',redirect:'follow',body:JSON.stringify(Object.assign({secreto:DRIVE_SECRET},body))});
+  return r.json();
+}
+async function _driveGet(params){
+  const q=new URLSearchParams(Object.assign({secreto:DRIVE_SECRET},params)).toString();
+  const r=await fetch(DRIVE_URL+'?'+q,{redirect:'follow'});
+  return r.json();
+}
+
+async function driveSyncAhora(o,hito){
+  o=o||S;
+  if(!DRIVE_URL||!o)return false;
+  _driveStatus='saving';actualizarIndicadorDrive();
+  try{
+    const j=await _drivePost({action:'save',obraId:o.id,obraName:nombreObra(o),hito:!!hito,data:o});
+    _driveStatus=j.ok?'saved':'error';
+    if(j.ok)setTimeout(()=>{if(_driveStatus==='saved'){_driveStatus='idle';actualizarIndicadorDrive();}},4000);
+    actualizarIndicadorDrive();
+    return !!j.ok;
+  }catch(e){_driveStatus='error';actualizarIndicadorDrive();return false;}
+}
+
+// Si se cierra la pestaña con cambios sin subir, se mandan igual
+window.addEventListener('pagehide',()=>{
+  if(!DRIVE_URL||!_driveTimer)return;
+  clearTimeout(_driveTimer);_driveTimer=null;
+  try{navigator.sendBeacon(DRIVE_URL,JSON.stringify({secreto:DRIVE_SECRET,action:'save',obraId:S.id,obraName:nombreObra(S),data:S}));}catch(e){}
+});
+
+async function cargarDriveEnModal(){
+  const box=document.getElementById('obrasDrive');
+  if(!DRIVE_URL){box.innerHTML=`<div class="obras-sec-t">☁ Google Drive</div><div class="obras-vacio">Respaldo en Drive todavía no conectado.</div>`;return;}
+  box.innerHTML=`<div class="obras-sec-t">☁ En Google Drive</div><div class="obras-vacio">Consultando…</div>`;
+  let j;
+  try{j=await _driveGet({action:'list'});}catch(e){j=null;}
+  if(!j||!j.ok){box.innerHTML=`<div class="obras-sec-t">☁ En Google Drive</div><div class="obras-vacio">No se pudo conectar con Drive.</div>`;return;}
+  const filas=(j.obras||[]).map(r=>{
+    const loc=DB.obras[r.id];
+    let estado,btn='';
+    if(!loc){estado='solo en Drive';btn=`<button class="btn btn-saveas" onclick="traerDeDrive('${r.id}')">Traer</button>`;}
+    else if((r.actualizado||'')>(loc.actualizado||'')){estado='<b style="color:#b45309">Drive tiene una versión más nueva</b>';btn=`<button class="btn btn-saveas" onclick="traerDeDrive('${r.id}')">Traer</button>`;}
+    else estado='sincronizada ✓';
+    return`<div class="obra-item">
+      <div class="obra-info"><div class="obra-nom">${r.nombre}</div>
+      <div class="obra-meta">${r.certs||0} certificados · Drive: ${_fechaCorta(r.actualizado)} · ${estado}</div></div>
+      <div class="obra-btns">${btn}</div></div>`;
+  }).join('');
+  box.innerHTML=`<div class="obras-sec-t">☁ En Google Drive</div>${filas||'<div class="obras-vacio">Todavía no hay obras en Drive.</div>'}`;
+}
+
+async function traerDeDrive(id){
+  const loc=DB.obras[id];
+  if(loc&&!confirm(`¿Reemplazar "${nombreObra(loc)}" de este navegador por la versión de Drive?`))return;
+  toast('☁ Trayendo de Drive…');
+  let j;
+  try{j=await _driveGet({action:'load',obraId:id});}catch(e){j=null;}
+  if(!j||!j.ok||!j.data){toast('⚠️ No se pudo traer la obra');return;}
+  const o=_normObra(j.data);
+  DB.obras[o.id]=o;_grabarLocal();
+  S=o;DB.activa=o.id;render();
+  renderObras();cargarDriveEnModal();
+  toast('✅ '+nombreObra(o)+' traída de Drive');
+}
+
+async function verVersiones(id){
+  const box=document.getElementById('obrasVers');
+  const o=DB.obras[id];
+  box.innerHTML=`<div class="obras-sec-t">🕘 Versiones de ${nombreObra(o)}</div><div class="obras-vacio">Consultando…</div>`;
+  let j;
+  try{j=await _driveGet({action:'versiones',obraId:id});}catch(e){j=null;}
+  if(!j||!j.ok){box.innerHTML+=`<div class="obras-vacio">No se pudo leer el historial.</div>`;return;}
+  const filas=(j.versiones||[]).map(v=>`<div class="obra-item">
+      <div class="obra-info"><div class="obra-nom">${_fechaCorta(v.fecha)}${v.hito?' · <span class="vers-hito">guardado manual</span>':''}</div>
+      <div class="obra-meta">${v.certs!=null?v.certs+' certificados · último: '+(v.ultimo||'—'):v.archivo}</div></div>
+      <div class="obra-btns"><button class="btn btn-ghost" onclick="restaurarVersion('${id}','${v.archivo}')">Restaurar</button></div></div>`).join('');
+  box.innerHTML=`<div class="obras-sec-t">🕘 Versiones de ${nombreObra(o)}</div>${filas||'<div class="obras-vacio">Sin versiones todavía.</div>'}`;
+}
+
+async function restaurarVersion(id,archivo){
+  if(!confirm('¿Restaurar esta versión?\n\nLa versión actual se guarda antes en el historial, así que no se pierde.'))return;
+  const actual=DB.obras[id];
+  if(actual)await driveSyncAhora(actual,true);
+  let j;
+  try{j=await _driveGet({action:'loadVersion',obraId:id,archivo});}catch(e){j=null;}
+  if(!j||!j.ok||!j.data){toast('⚠️ No se pudo restaurar');return;}
+  const o=_normObra(j.data);o.id=id;o.actualizado=new Date().toISOString();
+  DB.obras[id]=o;_grabarLocal();
+  S=o;DB.activa=id;render();
+  await driveSyncAhora(o,true);
+  renderObras();verVersiones(id);
+  toast('✅ Versión restaurada');
+}
+
+async function driveChequearNovedades(){
+  if(!DRIVE_URL)return;
+  let j;
+  try{j=await _driveGet({action:'list'});}catch(e){return;}
+  if(!j||!j.ok)return;
+  const r=(j.obras||[]).find(x=>x.id===S.id);
+  const nuevas=(j.obras||[]).filter(x=>!DB.obras[x.id]).length;
+  if(r&&(r.actualizado||'')>(S.actualizado||''))
+    toast(`☁ Drive tiene cambios más nuevos de esta obra. <button class="btn btn-saveas" style="margin-left:8px" onclick="traerDeDrive('${S.id}')">Traer</button>`);
+  else if(nuevas)
+    toast(`☁ Hay ${nuevas} obra${nuevas===1?'':'s'} en Drive que no están en este navegador. <button class="btn btn-saveas" style="margin-left:8px" onclick="openObras()">Ver</button>`);
+}
+
+// ══════════════════════════════════════════════════════════
+initS();
+document.getElementById('printFooter').innerHTML = buildPrintFooterBody();
+render();
+_bootDone=true;
+actualizarIndicadorDrive();
+setTimeout(driveChequearNovedades,1500);
+</script>
+</body>
+</html>
