@@ -328,12 +328,16 @@ col.col-m{width:86px}col.col-a{width:50px}col.col-p{width:58px}col.col-ck{width:
   /* en % y sumando 100: la descripción NO se queda con el sobrante */
   col.col-i,col.col-ib,col.col-ck,col.col-act{width:0!important}
   col.col-n{width:2.5%!important}
-  col.col-d{width:36%!important}
+  col.col-d{width:35%!important}
   col.col-m{width:11.5%!important}
   col.col-a{width:5.5%!important}
-  col.col-p{width:4.5%!important}
+  col.col-p{width:5.5%!important}
   /* ocultar en PDF: Desl., botón ×, I.Base$, Incid., Mto.ant., %ant. */
-  .no-print-col{display:none!important}
+  /* Ojo: no usar display:none acá. Sacar la celda de la fila corre todas las
+     siguientes un lugar y quedan con el ancho de la columna equivocada.
+     Se colapsan a ancho cero, conservando su lugar. */
+  .no-print-col{width:0!important;max-width:0!important;padding:0!important;border:none!important;overflow:hidden!important;font-size:0!important}
+  .no-print-col *{display:none!important}
   .no-print{display:none!important}
   .yes-print{display:block!important}
   #printTip{display:none!important}
