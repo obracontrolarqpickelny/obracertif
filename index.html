@@ -128,6 +128,12 @@ body{font-family:var(--sans);color:var(--ink)}
   font-size:10.5px;color:#92400e;font-weight:600;
 }
 .rc-pct strong{font-family:var(--mono);font-size:13px;font-weight:800}
+/* descuento por anticipo ya cobrado */
+.rc-ant{
+  margin-top:5px;padding-top:5px;border-top:1.5px solid rgba(146,64,14,.25);
+  font-size:10px;color:#9a3412;font-weight:600;
+}
+.rc-ant strong{font-family:var(--mono);font-size:11.5px;font-weight:800}
 .rc.pagado{border:2px solid #f59e0b;background:#fffbeb}
 .rc.pagado .rc-lbl{color:#92400e}
 .rc.pagado .rc-val{color:#78350f}
@@ -295,6 +301,8 @@ tr:last-child td{border-bottom:none}
   .rc.tenue .rc-val{color:#64748b!important;font-size:11.5px!important}
   .rc-pct{margin-top:4px!important;padding-top:4px!important;font-size:9px!important;color:#92400e!important}
   .rc-pct strong{font-size:11.5px!important}
+  .rc-ant{margin-top:4px!important;padding-top:4px!important;font-size:8.5px!important;color:#9a3412!important}
+  .rc-ant strong{font-size:10px!important}
 
   /* tablas — filas compactas, sin solapamiento */
   th{font-size:7.5px!important;padding:2px 3px!important;line-height:1.2!important}
@@ -808,7 +816,7 @@ function buildCert(c,ci){
   ${buildObraBar(c,ci)}
   ${buildActLog(c)}
   <div class="section-cliente">
-    ${buildResumen(c,ci,tC,pa,aP,'c')}
+    ${buildResumen(c,ci,tC,pa,aP,'c',S.anticipo_pct||0)}
     ${rubros.map(r=>buildTable(c,ci,'c',r)).join('')}
     <div class="no-print" style="padding:4px 8px 8px">
       <button class="btn-add-item" style="background:#4a7aab;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600"
@@ -909,6 +917,13 @@ function buildObraBar(c,ci){
       <input class="fi ed" value="${c.label}"
         onchange="S.certs[${ci}].label=this.value;renderTabs();persist()">
     </div>
+    <div class="fld" style="min-width:110px">
+      <span class="fld-lbl">Anticipo %</span>
+      <input class="fi ed" type="number" min="0" max="100" step="0.01"
+        value="${(S.anticipo_pct||0)?(S.anticipo_pct):''}" placeholder="0"
+        title="Anticipo ya cobrado al propietario. Se descuenta de lo que se cobra en cada certificado. Vacío o 0 = sin anticipo."
+        onchange="S.anticipo_pct=Math.max(0,Math.min(100,parseFloat(this.value)||0));renderPg();persist()">
+    </div>
     ${(()=>{let la=null;for(let i=ci;i>=0;i--){const l=S.certs[i].act_log;if(l&&l.length){la=l[l.length-1];break;}}
       return la?`<div class="fld"><span class="fld-lbl">Última actualiz.</span><input class="fi" style="background:#ede9fe;color:#4c1d95;font-weight:700;min-width:160px" value="${la.fecha} · +${la.pct}%" readonly></div>`:'';})()}
   </div>`;
@@ -936,8 +951,13 @@ function buildActLog(c){
 }
 
 // ── RESUMEN ───────────────────────────────────────────────
-function buildResumen(c,ci,t,pagAnt,aPagar,tipo){
+function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct){
   const mo=tipo==='mo';
+  // Anticipo ya cobrado: se descuenta de lo que se cobra en este certificado
+  const ant     = (!mo && antPct>0) ? antPct : 0;
+  const bruto   = aPagar;
+  const descAnt = ant>0 ? bruto*ant/100 : 0;
+  const neto    = bruto - descAnt;
   const pctFisico = t.base>0 ? t.acum/t.base : 0;   // avance físico acumulado de la obra
   const pctPres   = t.base>0 ? t.pres/t.base : 0;   // avance de ESTE certificado
   const saldo     = t.base - pagAnt;                // saldo por pagar del contrato
@@ -962,7 +982,8 @@ function buildResumen(c,ci,t,pagAnt,aPagar,tipo){
     </div>
     <div class="rc total">
       <div class="rc-lbl">Monto a pagar — presente certificado</div>
-      <div class="rc-val">${fm(aPagar)}</div>
+      <div class="rc-val">${fm(neto)}</div>
+      ${ant>0?`<div class="rc-ant">Certificado ${fm(bruto)} − anticipo ${ant}%: <strong>${fm(descAnt)}</strong></div>`:''}
       <div class="rc-pct">Avance de este certificado: <strong>${(pctPres*100).toFixed(1)}%</strong></div>
     </div>
   </div>`;
