@@ -147,8 +147,16 @@ body{font-family:var(--sans);color:var(--ink)}
 .rc.total .rc-lbl{color:#92400e;font-weight:900;text-transform:uppercase;letter-spacing:.04em;font-size:10px}
 .rc.total .rc-val{color:#92400e;font-size:22px;font-weight:800}
 
+/* ── HERRAMIENTAS MANO DE OBRA ── */
+.mo-tools{display:flex;gap:18px;flex-wrap:wrap;background:#f0f7f0;border:1px solid #cfe3cf;
+  border-radius:8px;padding:9px 14px;margin-bottom:10px}
+.mo-tool{display:flex;flex-direction:column;gap:4px}
+.mo-tool-row{display:flex;align-items:center;gap:6px}
+.mo-tool-row input{width:90px}
+.mo-tool-row span{font-size:11px;color:#555}
+
 /* ── TABLA ── */
-.tblock{background:#fff;border:1px solid var(--brd);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.tblock{background:#fff;border:1px solid var(--brd);border-radius:8px;overflow-x:auto;margin-bottom:8px}
 .th-strip{
   padding:7px 13px;display:flex;align-items:center;gap:8px;
   font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#fff;
@@ -448,7 +456,7 @@ tr:last-child td{border-bottom:none}
 .c-ib{width:96px;text-align:right}
 
 /* columna de acciones (delete) */
-.c-act{width:22px;text-align:center;padding:2px!important}
+.c-act{width:70px;text-align:center;padding:2px!important}
 .btn-del{
   width:15px;height:15px;border-radius:50%;border:none;cursor:pointer;
   background:#fee2e2;color:#dc2626;font-size:9px;font-weight:900;
@@ -649,10 +657,6 @@ tr:last-child td{border-bottom:none}
           <span class="fld-lbl">Importe MO $</span>
           <input id="aiImpMO" class="fi" type="number" min="0" step="0.01" placeholder="0,00">
         </div>
-        <div class="fld" style="width:80px">
-          <span class="fld-lbl">Incid. %</span>
-          <input id="aiIncid" class="fi" type="number" min="0" max="100" step="0.01" placeholder="0,00">
-        </div>
       </div>
     </div>
     <div class="modal-acts">
@@ -828,6 +832,7 @@ function buildCert(c,ci){
     PLANILLA MANO DE OBRA — no entregar al propietario
   </div>
   <div class="section-mo">
+    ${buildMOTools(ci)}
     ${buildResumen(c,ci,tMO,pamo,aPmo,'mo')}
     ${rubros.map(r=>buildTable(c,ci,'mo',r)).join('')}
   </div>`;
@@ -1025,6 +1030,8 @@ function buildTable(c,ci,tipo,rubro){
 
   // ¿ya se aplicó alguna actualización de precios en la obra?
   const hasUpd = S.certs.some(c=>c.act_log&&c.act_log.length>0);
+  // Total de la planilla: la incidencia de cada ítem se calcula sobre esto
+  const totVig = allItems.reduce((s,i)=>s+(i.importe_actual||0),0);
 
   const rows=items.map(it=>{
     const done=it.pct_acum>=0.9999;
@@ -1087,9 +1094,7 @@ function buildTable(c,ci,tipo,rubro){
       <td class="c-n">${it.n}</td>
       <td class="c-d"><input class="desc-inp" type="text" value="${it.desc.replace(/"/g,'&quot;')}"
         onchange="setDesc(${it.n},this.value)" title="Editar descripción"></td>
-      <td class="c-i no-print-col"><input class="incid-inp" type="number" min="0" max="100" step="0.01"
-        value="${(it.incid*100).toFixed(2)}"
-        onchange="setIncid('${tipo}',${ci},${it.n},this.value)">%</td>
+      <td class="c-i no-print-col" title="Incidencia calculada: ${fm(it.importe_actual)} sobre ${fm(totVig)} del total">${(totVig>0?it.importe_actual/totVig*100:0).toFixed(2)}%</td>
       <td class="c-ib no-print-col">${impBaseHtml}</td>
       <td class="c-m">${impVigHtml}</td>
       <td class="c-m"><span class="va">${mAnt>0?fm(mAnt):'—'}</span></td>
@@ -1102,7 +1107,9 @@ function buildTable(c,ci,tipo,rubro){
       <td class="c-act no-print" style="white-space:nowrap">
         <button onclick="moveItem(${it.n},-1)" title="Subir" ${isFirst?'disabled':''} style="background:none;border:none;cursor:pointer;opacity:${isFirst?.25:1};padding:0 2px;font-size:11px">↑</button>
         <button onclick="moveItem(${it.n},+1)" title="Bajar" ${isLast?'disabled':''} style="background:none;border:none;cursor:pointer;opacity:${isLast?.25:1};padding:0 2px;font-size:11px">↓</button>
-        <button class="btn-del" onclick="deleteItem(${it.n})" title="Eliminar ítem ${it.n}">×</button>
+        ${isMO?'':`<button onclick="moverItemRubro(${it.n})" title="Llevar a otro rubro" style="background:none;border:none;cursor:pointer;padding:0 2px;font-size:11px;color:#4a7aab">⇄</button>`}
+        <button class="btn-del" onclick="${isMO?`deleteItemMO(${it.n})`:`deleteItem(${it.n})`}"
+          title="${isMO?'Quitar de mano de obra (sigue en la planilla del cliente)':'Eliminar ítem '+it.n+' de toda la obra'}">×</button>
       </td>
     </tr>`;
   }).join('');
@@ -1123,14 +1130,14 @@ function buildTable(c,ci,tipo,rubro){
     </div>
     <table>
       <colgroup>
-        <col style="width:26px"><col style="min-width:200px">
+        <col style="width:26px"><col style="width:360px">
         <col style="width:44px">
         <col style="width:86px"><col style="width:86px">
         <col style="width:86px"><col style="width:50px">
         ${isMO?'<col style="width:42px">':''}
         <col style="width:58px"><col style="width:86px">
         <col style="width:50px"><col style="width:86px">
-        <col style="width:20px">
+        <col style="width:70px">
       </colgroup>
       <thead><tr>
         <th class="l">Nº</th><th class="l">Descripción</th>
@@ -1342,18 +1349,21 @@ function setIncid(tipo,ci,n,val){
 
 function renumberItems(c){
   const rubros=(S&&S.rubros)||[{id:'gruesa'},{id:'fina'}];
-  ['items_c','items_mo'].forEach(k=>{
-    let n=0;const ordered=[];
-    rubros.forEach(r=>{
-      const grp=c[k].filter(x=>x.grupo===r.id);
-      grp.forEach(it=>{it.n=++n;});
-      ordered.push(...grp);
-    });
-    // Items en rubros desconocidos van al final
-    const extra=c[k].filter(x=>!rubros.some(r=>r.id===x.grupo));
-    extra.forEach(it=>{it.n=++n;});
-    c[k]=[...ordered,...extra];
-  });
+  const ordenar=arr=>{
+    const out=[];
+    rubros.forEach(r=>out.push(...arr.filter(x=>x.grupo===r.id)));
+    out.push(...arr.filter(x=>!rubros.some(r=>r.id===x.grupo))); // rubros desconocidos, al final
+    return out;
+  };
+  // La planilla del cliente manda la numeración
+  const cli=ordenar(c.items_c), mapa={};
+  cli.forEach((it,i)=>{mapa[it.n]=i+1;it.n=i+1;});
+  c.items_c=cli;
+  // Mano de obra conserva el número del ítem equivalente del cliente,
+  // así sigue alineada aunque le falte alguno
+  const mo=ordenar(c.items_mo);
+  mo.forEach(it=>{if(mapa[it.n]!=null)it.n=mapa[it.n];});
+  c.items_mo=mo;
 }
 
 function moveItem(n,dir){
@@ -1389,6 +1399,92 @@ function deleteItem(n){
   render();
 }
 
+// Quita el ítem solo de la planilla de mano de obra; en el cliente sigue.
+// No se renumera: los números tienen que seguir coincidiendo con los del cliente.
+function deleteItemMO(n){
+  const it=S.certs[0].items_mo.find(x=>x.n===n);
+  if(!it)return;
+  const d=it.desc.length>50?it.desc.slice(0,50)+'…':it.desc;
+  if(!confirm(`¿Quitar el ítem ${n} solo de MANO DE OBRA?\n"${d}"\n\nSigue en la planilla del cliente.\nLas incidencias de mano de obra se recalculan solas.`))return;
+  S.certs.forEach(c=>{c.items_mo=c.items_mo.filter(x=>x.n!==n);});
+  render();
+}
+
+// Lleva un ítem a otro rubro (en todos los certificados) y lo renumera
+function moverItemRubro(n){
+  const it=S.certs[0].items_c.find(x=>x.n===n);
+  if(!it)return;
+  const otros=(S.rubros||[]).filter(r=>r.id!==it.grupo);
+  if(!otros.length){alert('No hay otro rubro al que llevarlo.\nCreá uno con "＋ Agregar rubro".');return;}
+  let destino;
+  if(otros.length===1){
+    if(!confirm(`¿Llevar el ítem ${n} a "${otros[0].label}"?`))return;
+    destino=otros[0].id;
+  }else{
+    const lista=otros.map((r,i)=>`${i+1} — ${r.label}`).join('\n');
+    const resp=prompt(`¿A qué rubro llevar el ítem ${n}?\n"${it.desc}"\n\n${lista}\n\nEscribí el número:`);
+    if(resp===null)return;
+    const i=parseInt(resp,10)-1;
+    if(!(i>=0&&i<otros.length)){alert('Ese número no corresponde a ningún rubro.');return;}
+    destino=otros[i].id;
+  }
+  S.certs.forEach(c=>{
+    [c.items_c,c.items_mo].forEach(arr=>{const x=arr.find(y=>y.n===n);if(x)x.grupo=destino;});
+    renumberItems(c);
+  });
+  render();
+}
+
+// ── Mano de obra: porcentajes generales ────────────────────
+function aplicarMOImportes(){
+  const v=parseFloat(document.getElementById('moPctImp').value);
+  if(!(v>0)){alert('Ingresá un porcentaje mayor a 0.');return;}
+  if(!confirm(`¿Poner el importe de mano de obra en el ${v}% del importe del cliente, en TODOS los ítems?\n\nReemplaza los importes de mano de obra que ya estén cargados.`))return;
+  S.mo_pct=v;
+  S.certs.forEach(c=>{
+    c.items_mo.forEach(it=>{
+      const cl=c.items_c.find(x=>x.n===it.n);
+      if(!cl)return;
+      it.importe_base  =(cl.importe_base!=null?cl.importe_base:cl.importe_actual)*v/100;
+      it.importe_actual= cl.importe_actual*v/100;
+    });
+  });
+  render();
+}
+function aplicarMOAvance(ci){
+  const v=parseFloat(document.getElementById('moPctAv').value);
+  if(!(v>=0&&v<=100)){alert('Ingresá un porcentaje entre 0 y 100.');return;}
+  if(!confirm(`¿Poner el avance de este certificado en ${v}% en TODOS los ítems de mano de obra?\n\nQuedan desligados del avance del cliente, así podés ajustarlos uno por uno después.`))return;
+  const c=S.certs[ci];
+  c.items_mo.forEach(it=>{
+    it.desl_mo=true;
+    it.pct_pres=Math.max(0,Math.min(v/100,1-it.pct_ant));
+    it.pct_acum=it.pct_ant+it.pct_pres;
+  });
+  render();
+}
+function buildMOTools(ci){
+  return`<div class="mo-tools no-print">
+    <div class="mo-tool">
+      <span class="fld-lbl">Mano de obra = % del importe del cliente</span>
+      <div class="mo-tool-row">
+        <input id="moPctImp" class="fi ed" type="number" min="0" max="100" step="0.01"
+          value="${S.mo_pct||''}" placeholder="ej: 35">
+        <span>%</span>
+        <button class="btn btn-saveas" onclick="aplicarMOImportes()">Completar importes</button>
+      </div>
+    </div>
+    <div class="mo-tool">
+      <span class="fld-lbl">Avance de este certificado en todos los ítems</span>
+      <div class="mo-tool-row">
+        <input id="moPctAv" class="fi ed" type="number" min="0" max="100" step="1" placeholder="ej: 30">
+        <span>%</span>
+        <button class="btn btn-saveas" onclick="aplicarMOAvance(${ci})">Aplicar avance</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ── Agregar ítem ──────────────────────────────────────────
 let _addGrupo='gruesa',_addCi=0;
 function openAddItem(grupo,ci){
@@ -1396,7 +1492,6 @@ function openAddItem(grupo,ci){
   document.getElementById('aiDesc').value='';
   document.getElementById('aiImpC').value='';
   document.getElementById('aiImpMO').value='';
-  document.getElementById('aiIncid').value='';
   document.getElementById('ovAddItem').classList.add('open');
 }
 function closeAddItem(){document.getElementById('ovAddItem').classList.remove('open');}
@@ -1405,7 +1500,7 @@ function doAddItem(){
   if(!desc){alert('La descripción es obligatoria');return;}
   const impC=parseFloat(document.getElementById('aiImpC').value)||0;
   const impMO=parseFloat(document.getElementById('aiImpMO').value)||0;
-  const incid=parseFloat(document.getElementById('aiIncid').value)/100||0;
+  const incid=0; // la incidencia se calcula sola sobre el total
   const rubros=S.rubros||[{id:'gruesa'},{id:'fina'}];
   const ri=rubros.findIndex(r=>r.id===_addGrupo);
   S.certs.forEach(c=>{
