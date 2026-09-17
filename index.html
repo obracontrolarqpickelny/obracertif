@@ -325,12 +325,13 @@ col.col-m{width:86px}col.col-a{width:50px}col.col-p{width:58px}col.col-ck{width:
   /* anchos fijos: todas las tablas quedan con las mismas columnas,
      así Obra Fina no se ensancha respecto de Obra Gruesa */
   table{table-layout:fixed!important}
+  /* en % y sumando 100: la descripción NO se queda con el sobrante */
   col.col-i,col.col-ib,col.col-ck,col.col-act{width:0!important}
-  col.col-n{width:22px!important}
-  col.col-m{width:78px!important}
-  col.col-a{width:44px!important}
-  col.col-p{width:48px!important}
-  col.col-d{width:auto!important}  /* toma el resto: igual en todas las tablas */
+  col.col-n{width:2.5%!important}
+  col.col-d{width:36%!important}
+  col.col-m{width:11.5%!important}
+  col.col-a{width:5.5%!important}
+  col.col-p{width:4.5%!important}
   /* ocultar en PDF: Desl., botón ×, I.Base$, Incid., Mto.ant., %ant. */
   .no-print-col{display:none!important}
   .no-print{display:none!important}
