@@ -198,6 +198,10 @@ tr:last-child td{border-bottom:none}
 .rd td:first-child{background:#9ca3af!important;color:#fff!important}
 
 /* columnas */
+/* anchos por columna — así todas las tablas coinciden entre sí */
+col.col-n{width:26px}col.col-d{width:360px}col.col-i{width:44px}col.col-ib{width:86px}
+col.col-m{width:86px}col.col-a{width:50px}col.col-p{width:58px}col.col-ck{width:42px}col.col-act{width:70px}
+
 .c-n{width:30px}
 .c-d{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c-i{width:48px;text-align:right;font-family:var(--mono);font-size:9.5px;opacity:.65}
@@ -318,8 +322,15 @@ tr:last-child td{border-bottom:none}
   .th-strip{padding:4px 8px!important;font-size:8.5px!important}
   .pi{font-size:8.5px!important;width:38px!important;padding:1px 2px!important}
 
-  /* layout automático — descripción toma el espacio libre */
-  table{table-layout:auto!important}
+  /* anchos fijos: todas las tablas quedan con las mismas columnas,
+     así Obra Fina no se ensancha respecto de Obra Gruesa */
+  table{table-layout:fixed!important}
+  col.col-i,col.col-ib,col.col-ck,col.col-act{width:0!important}
+  col.col-n{width:22px!important}
+  col.col-m{width:78px!important}
+  col.col-a{width:44px!important}
+  col.col-p{width:48px!important}
+  col.col-d{width:auto!important}  /* toma el resto: igual en todas las tablas */
   /* ocultar en PDF: Desl., botón ×, I.Base$, Incid., Mto.ant., %ant. */
   .no-print-col{display:none!important}
   .no-print{display:none!important}
@@ -328,7 +339,7 @@ tr:last-child td{border-bottom:none}
   /* TODOS los textos en una sola línea */
   td,th{white-space:nowrap!important;overflow:hidden!important}
   /* descripción: 1 línea, ancho mínimo garantizado */
-  .c-d,.c-d input{white-space:nowrap!important;overflow:visible!important;min-width:260px!important;max-width:none!important;width:100%!important}
+  .c-d,.c-d input{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;max-width:none!important;width:100%!important}
   /* columnas numéricas compactas */
   .c-m{width:74px!important;min-width:70px!important}
   .c-a{width:40px!important;min-width:36px!important}
@@ -1130,14 +1141,14 @@ function buildTable(c,ci,tipo,rubro){
     </div>
     <table>
       <colgroup>
-        <col style="width:26px"><col style="width:360px">
-        <col style="width:44px">
-        <col style="width:86px"><col style="width:86px">
-        <col style="width:86px"><col style="width:50px">
-        ${isMO?'<col style="width:42px">':''}
-        <col style="width:58px"><col style="width:86px">
-        <col style="width:50px"><col style="width:86px">
-        <col style="width:70px">
+        <col class="col-n"><col class="col-d">
+        <col class="col-i">
+        <col class="col-ib"><col class="col-m">
+        <col class="col-m"><col class="col-a">
+        ${isMO?'<col class="col-ck">':''}
+        <col class="col-p"><col class="col-m">
+        <col class="col-a"><col class="col-m">
+        <col class="col-act">
       </colgroup>
       <thead><tr>
         <th class="l">Nº</th><th class="l">Descripción</th>
