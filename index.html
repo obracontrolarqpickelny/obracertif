@@ -208,8 +208,8 @@ tr:last-child td{border-bottom:none}
 
 /* columnas */
 /* anchos por columna — así todas las tablas coinciden entre sí */
-col.col-n{width:26px}col.col-d{width:360px}col.col-i{width:44px}col.col-ib{width:86px}
-col.col-m{width:86px}col.col-a{width:50px}col.col-p{width:58px}col.col-ck{width:42px}col.col-act{width:70px}
+col.col-n{width:26px}col.col-d{width:330px}col.col-i{width:44px}col.col-ib{width:86px}
+col.col-m{width:86px}col.col-a{width:56px}col.col-p{width:68px}col.col-ck{width:42px}col.col-act{width:70px}
 
 .c-n{width:30px}
 .c-d{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -339,10 +339,10 @@ col.col-m{width:86px}col.col-a{width:50px}col.col-p{width:58px}col.col-ck{width:
   /* en % y sumando 100: la descripción NO se queda con el sobrante */
   col.col-i,col.col-ib,col.col-ck,col.col-act{width:0!important}
   col.col-n{width:2.5%!important}
-  col.col-d{width:35%!important}
+  col.col-d{width:33%!important}
   col.col-m{width:11.5%!important}
-  col.col-a{width:5.5%!important}
-  col.col-p{width:5.5%!important}
+  col.col-a{width:6%!important}
+  col.col-p{width:6.5%!important}
   /* ocultar en PDF: Desl., botón ×, I.Base$, Incid., Mto.ant., %ant. */
   /* Ojo: no usar display:none acá. Sacar la celda de la fila corre todas las
      siguientes un lugar y quedan con el ancho de la columna equivocada.
@@ -1155,12 +1155,12 @@ function buildTable(c,ci,tipo,rubro){
       </span>
       <span class="yes-print" style="display:none;text-align:center;font-weight:700">${hasPres?'100.00%':'—'}</span>`;
     } else if(isMO && !it.desl_mo){
-      piHtml=`<input class="pi" type="number" value="${Math.round(it.pct_pres*100)}" disabled
+      piHtml=`<input class="pi" type="number" value="${(it.pct_pres*100).toFixed(2)}" disabled
         style="background:#e8f4e8;border-color:#4a8a4a;color:#1a4a1a"
         title="Sincronizado con planilla cliente">`;
     } else {
-      piHtml=`<input class="pi" type="number" min="0" max="100" step="1"
-        value="${Math.round(it.pct_pres*100)}"
+      piHtml=`<input class="pi" type="number" min="0" max="100" step="0.01"
+        value="${(it.pct_pres*100).toFixed(2)}"
         onchange="setPct('${tipo}',${ci},${it.n},this.value)">`;
     }
 
