@@ -146,11 +146,11 @@ body{font-family:var(--sans);color:var(--ink)}
 /* desglose de cómo se llegó al pagado acumulado */
 .rc-desg{margin-top:5px;padding-top:5px;border-top:1.5px solid rgba(146,64,14,.25);
   display:flex;flex-direction:column;gap:3px;font-size:9.5px;color:#92400e;font-weight:600}
-.rc-desg label{display:flex;align-items:center;gap:5px;justify-content:space-between}
+.rc-desg label{display:flex;flex-direction:column;align-items:stretch;gap:2px}
 .rc-desg strong{font-family:var(--mono);font-size:10.5px}
 .pag-mini{font-family:var(--mono);font-size:11px;font-weight:700;color:#78350f;
   border:1.5px dashed #f59e0b;border-radius:3px;background:var(--yel);
-  padding:1px 4px;width:110px;text-align:right}
+  padding:2px 5px;width:100%;text-align:right}
 .pag-mini:focus{outline:none;border-color:#d97706}
 .rc.total{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border:4px solid var(--acc);box-shadow:0 2px 12px rgba(232,160,32,.35)}
 .rc.total .rc-lbl{color:#92400e;font-weight:900;text-transform:uppercase;letter-spacing:.04em;font-size:10px}
@@ -1055,15 +1055,15 @@ function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct,pagTotal){
         return`<div class="rc-val" style="color:#78350f">${fm(pagTotal)}</div>
         <div class="rc-desg">
           ${ci===0
-            ? `<label>Cobrado antes
+            ? `<label>Pagado antes de este certif.
                  <input class="pag-mini" type="text" value="${fm(c[campoSeed]||0)}"
                    onfocus="this.value=(S.certs[0].${campoSeed}||0).toFixed(2);this.select()"
                    onblur="S.certs[0].${campoSeed}=parsePagado(this.value);render()"></label>`
-            : `<span>Anterior: <strong>${fm(previo)}</strong></span>`}
+            : `<span>Total al certif. anterior: <strong>${fm(previo)}</strong></span>`}
           ${descPrev>0?`<span>+ anticipo ${ant}% del certif. anterior: <strong>${fm(descPrev)}</strong></span>`:''}
-          <label>+ recibido
+          <label>Pagado en el certif. anterior
             <input class="pag-mini" type="text" value="${fm(c[campoPago]||0)}"
-              title="Lo que te transfirieron al centavo por el certificado anterior. Se suma a lo que ya figuraba pagado."
+              title="${mo?'Lo que le pagaste al centavo a la mano de obra por el certificado anterior.':'Lo que te transfirieron al centavo por el certificado anterior.'} Se suma al total."
               onfocus="this.value=(S.certs[${ci}].${campoPago}||0).toFixed(2);this.select()"
               onblur="S.certs[${ci}].${campoPago}=parsePagado(this.value);render()"></label>
         </div>`;})()}
