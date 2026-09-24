@@ -371,10 +371,14 @@ col.col-m{width:110px}col.col-a{width:58px}col.col-p{width:69px}col.col-ck{width
   /* descripción: 1 línea, ancho mínimo garantizado */
   .c-d,.c-d input{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;max-width:none!important;width:100%!important}
   /* columnas numéricas compactas */
-  .c-m{width:80px!important;min-width:76px!important}
-  .c-a{width:44px!important;min-width:40px!important}
-  .c-p{width:48px!important;min-width:44px!important}
-  .c-n{width:20px!important}
+  /* La tabla toma el ancho de las CELDAS, no el de las columnas: si la
+     descripción no lo lleva fijo, se queda con todo el sobrante y comprime
+     al resto. Suman 100%. */
+  .c-n{width:2%!important;min-width:0!important}
+  .c-d{width:33%!important}
+  .c-m{width:11.5%!important;min-width:0!important}
+  .c-a{width:6%!important;min-width:0!important}
+  .c-p{width:6.5%!important;min-width:0!important}
   /* act-log visible en PDF */
   .act-log.vis{
     display:block!important;
