@@ -143,6 +143,15 @@ body{font-family:var(--sans);color:var(--ink)}
   padding:2px 6px;width:100%;
 }
 .pag-inp:focus{outline:none;border-color:#d97706}
+/* desglose de cómo se llegó al pagado acumulado */
+.rc-desg{margin-top:5px;padding-top:5px;border-top:1.5px solid rgba(146,64,14,.25);
+  display:flex;flex-direction:column;gap:3px;font-size:9.5px;color:#92400e;font-weight:600}
+.rc-desg label{display:flex;align-items:center;gap:5px;justify-content:space-between}
+.rc-desg strong{font-family:var(--mono);font-size:10.5px}
+.pag-mini{font-family:var(--mono);font-size:11px;font-weight:700;color:#78350f;
+  border:1.5px dashed #f59e0b;border-radius:3px;background:var(--yel);
+  padding:1px 4px;width:110px;text-align:right}
+.pag-mini:focus{outline:none;border-color:#d97706}
 .rc.total{background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);border:4px solid var(--acc);box-shadow:0 2px 12px rgba(232,160,32,.35)}
 .rc.total .rc-lbl{color:#92400e;font-weight:900;text-transform:uppercase;letter-spacing:.04em;font-size:10px}
 .rc.total .rc-val{color:#92400e;font-size:22px;font-weight:800}
@@ -313,6 +322,9 @@ col.col-m{width:86px}col.col-a{width:50px}col.col-p{width:58px}col.col-ck{width:
   .rc.tenue .rc-val{color:#64748b!important;font-size:11.5px!important}
   .rc-pct{margin-top:4px!important;padding-top:4px!important;font-size:9px!important;color:#92400e!important}
   .rc-pct strong{font-size:11.5px!important}
+  .rc-desg{margin-top:4px!important;padding-top:4px!important;font-size:8px!important;gap:2px!important}
+  .rc-desg strong{font-size:9px!important}
+  .pag-mini{background:#fffbeb!important;border:1px dashed #f59e0b!important;font-size:9px!important;width:82px!important;-webkit-appearance:textfield}
   .rc-ant{margin-top:4px!important;padding-top:4px!important;font-size:8.5px!important;color:#9a3412!important}
   .rc-ant strong{font-size:10px!important}
 
@@ -719,6 +731,7 @@ function makeCert(id,prev){
     fecha_medicion:'',fecha_pago:'',
     pagado_anterior:    prev?Math.round(prev.items_c .reduce((s,i)=>s+i.importe_actual*i.pct_acum,0)):0,
     pagado_mo_anterior: prev?Math.round(prev.items_mo.reduce((s,i)=>s+i.importe_actual*i.pct_acum,0)):0,
+    pago_recibido:0,
     act_log:[],
     items_c: prev?prev.items_c.map(carry):BASE_C.map(fresh),
     items_mo:prev?prev.items_mo.map(carry):BASE_MO.map(fresh),
@@ -824,11 +837,33 @@ function patch(ci){
   old.replaceWith(nd);persist();
 }
 
+// ── PAGOS ────────────────────────────────────────────────
+// El anticipo que se amortiza en un certificado cuenta como pagado:
+// el propietario ya entregó esa plata al principio de la obra.
+function descAnticipoDe(bruto){
+  const a=S.anticipo_pct||0;
+  return a>0?bruto*a/100:0;
+}
+// Pagado acumulado incluyendo lo de ESTE certificado
+function pagadoHasta(ci){
+  let acum=S.certs[0].pagado_anterior||0;   // lo cobrado antes del primer certificado
+  for(let i=0;i<=ci;i++){
+    const c=S.certs[i];
+    const bruto=tot(c.items_c).acum-acum;
+    acum+=descAnticipoDe(bruto)+(c.pago_recibido||0);
+  }
+  return acum;
+}
+// Pagado con el que arranca este certificado (sin contar lo suyo)
+function pagadoPrevio(ci){
+  return ci===0?(S.certs[0].pagado_anterior||0):pagadoHasta(ci-1);
+}
+
 // ── BUILD CERT ────────────────────────────────────────────
 function buildCert(c,ci){
   const rubros=S.rubros||[{id:'gruesa',label:'Obra Gruesa'},{id:'fina',label:'Obra Fina'}];
   const tC=tot(c.items_c),tMO=tot(c.items_mo);
-  const pa=c.pagado_anterior||0, pamo=c.pagado_mo_anterior||0;
+  const pa=pagadoPrevio(ci), pamo=c.pagado_mo_anterior||0;
   const aP=tC.acum-pa, aPmo=tMO.acum-pamo;
 
   return `
@@ -836,7 +871,7 @@ function buildCert(c,ci){
   ${buildObraBar(c,ci)}
   ${buildActLog(c)}
   <div class="section-cliente">
-    ${buildResumen(c,ci,tC,pa,aP,'c',S.anticipo_pct||0)}
+    ${buildResumen(c,ci,tC,pa,aP,'c',S.anticipo_pct||0,pagadoHasta(ci))}
     ${rubros.map(r=>buildTable(c,ci,'c',r)).join('')}
     <div class="no-print" style="padding:4px 8px 8px">
       <button class="btn-add-item" style="background:#4a7aab;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600"
@@ -972,8 +1007,9 @@ function buildActLog(c){
 }
 
 // ── RESUMEN ───────────────────────────────────────────────
-function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct){
+function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct,pagTotal){
   const mo=tipo==='mo';
+  if(pagTotal==null)pagTotal=pagAnt;
   // Anticipo ya cobrado: se descuenta de lo que se cobra en este certificado
   const ant     = (!mo && antPct>0) ? antPct : 0;
   const bruto   = aPagar;
@@ -981,7 +1017,7 @@ function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct){
   const neto    = bruto - descAnt;
   const pctFisico = t.base>0 ? t.acum/t.base : 0;   // avance físico acumulado de la obra
   const pctPres   = t.base>0 ? t.pres/t.base : 0;   // avance de ESTE certificado
-  const saldo     = t.base - pagAnt;                // saldo por pagar del contrato
+  const saldo     = t.base - pagTotal;              // saldo por pagar del contrato
   return`<div class="resumen">
     <div class="rc tenue">
       <div class="rc-lbl">% Físico acumulado</div>
@@ -997,9 +1033,24 @@ function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct){
     </div>
     <div class="rc pagado">
       <div class="rc-lbl">★ Pagado hasta el momento</div>
-      <input class="pag-inp" type="text" value="${fm(pagAnt)}"
-        onfocus="this.value=(S.certs[${ci}].${mo?'pagado_mo_anterior':'pagado_anterior'}||0).toFixed(2);this.select()"
-        onblur="const v=parsePagado(this.value);S.certs[${ci}].${mo?'pagado_mo_anterior':'pagado_anterior'}=v;this.value=fm(v);patch(${ci})">
+      ${mo?`<input class="pag-inp" type="text" value="${fm(pagAnt)}"
+        onfocus="this.value=(S.certs[${ci}].pagado_mo_anterior||0).toFixed(2);this.select()"
+        onblur="const v=parsePagado(this.value);S.certs[${ci}].pagado_mo_anterior=v;this.value=fm(v);patch(${ci})">`
+      :`<div class="rc-val" style="color:#78350f">${fm(pagTotal)}</div>
+        <div class="rc-desg">
+          ${ci===0
+            ? `<label>Cobrado antes
+                 <input class="pag-mini" type="text" value="${fm(c.pagado_anterior||0)}"
+                   onfocus="this.value=(S.certs[0].pagado_anterior||0).toFixed(2);this.select()"
+                   onblur="S.certs[0].pagado_anterior=parsePagado(this.value);render()"></label>`
+            : `<span>Anterior: <strong>${fm(pagAnt)}</strong></span>`}
+          ${descAnt>0?`<span>+ anticipo ${ant}%: <strong>${fm(descAnt)}</strong></span>`:''}
+          <label>+ recibido ahora
+            <input class="pag-mini" type="text" value="${fm(c.pago_recibido||0)}"
+              title="Lo que efectivamente te transfirieron por este certificado"
+              onfocus="this.value=(S.certs[${ci}].pago_recibido||0).toFixed(2);this.select()"
+              onblur="S.certs[${ci}].pago_recibido=parsePagado(this.value);render()"></label>
+        </div>`}
     </div>
     <div class="rc total">
       <div class="rc-lbl">Monto a pagar — presente certificado</div>
@@ -1666,6 +1717,18 @@ function _normObra(o){
   if(!o.rubros)o.rubros=[{id:'gruesa',label:'Obra Gruesa'},{id:'fina',label:'Obra Fina'}];
   if(!Array.isArray(o.certs)||!o.certs.length)o.certs=[makeCert(1,null)];
   if(o.active==null||o.active<0||o.active>=o.certs.length)o.active=o.certs.length-1;
+  // Pagos: antes se cargaba a mano el acumulado de cada certificado; ahora se carga
+  // lo recibido en cada uno y el acumulado se encadena solo. Se deduce lo recibido
+  // de la diferencia entre acumulados, así los números siguen dando igual que antes.
+  if(!o.pagos_v2){
+    o.certs.forEach((c,i)=>{
+      if(c.pago_recibido==null){
+        const sig=o.certs[i+1];
+        c.pago_recibido=sig?Math.max(0,(sig.pagado_anterior||0)-(c.pagado_anterior||0)):0;
+      }
+    });
+    o.pagos_v2=true;
+  }
   return o;
 }
 function _obraVacia(){
