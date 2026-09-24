@@ -846,12 +846,15 @@ function descAnticipoCert(c){
   const a=S.anticipo_pct||0;
   return a>0?tot(c.items_c).pres*a/100:0;
 }
-// Pagado acumulado incluyendo lo de ESTE certificado
+// Pagado acumulado hasta este certificado.
+// En cada certificado se carga lo transferido por el ANTERIOR; junto con ese pago
+// entra el anticipo amortizado de ese certificado anterior, que es cuando se salda.
+// Por eso el primer certificado arranca en lo cobrado antes de empezar (0 si no hubo).
 function pagadoHasta(ci){
-  let acum=S.certs[0].pagado_anterior||0;   // lo cobrado antes del primer certificado
+  let acum=S.certs[0].pagado_anterior||0;
   for(let i=0;i<=ci;i++){
-    const c=S.certs[i];
-    acum+=descAnticipoCert(c)+(c.pago_recibido||0);
+    acum+=(S.certs[i].pago_recibido||0);
+    if(i>0)acum+=descAnticipoCert(S.certs[i-1]);
   }
   return acum;
 }
@@ -864,7 +867,7 @@ function pagadoPrevio(ci){
 function buildCert(c,ci){
   const rubros=S.rubros||[{id:'gruesa',label:'Obra Gruesa'},{id:'fina',label:'Obra Fina'}];
   const tC=tot(c.items_c),tMO=tot(c.items_mo);
-  const pa=pagadoPrevio(ci), pamo=c.pagado_mo_anterior||0;
+  const pa=pagadoHasta(ci), pamo=c.pagado_mo_anterior||0;
   const aP=tC.acum-pa, aPmo=tMO.acum-pamo;
 
   return `
@@ -872,7 +875,7 @@ function buildCert(c,ci){
   ${buildObraBar(c,ci)}
   ${buildActLog(c)}
   <div class="section-cliente">
-    ${buildResumen(c,ci,tC,pa,aP,'c',S.anticipo_pct||0,pagadoHasta(ci))}
+    ${buildResumen(c,ci,tC,pa,aP,'c',S.anticipo_pct||0,pa)}
     ${rubros.map(r=>buildTable(c,ci,'c',r)).join('')}
     <div class="no-print" style="padding:4px 8px 8px">
       <button class="btn-add-item" style="background:#4a7aab;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600"
@@ -1044,8 +1047,9 @@ function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct,pagTotal){
                  <input class="pag-mini" type="text" value="${fm(c.pagado_anterior||0)}"
                    onfocus="this.value=(S.certs[0].pagado_anterior||0).toFixed(2);this.select()"
                    onblur="S.certs[0].pagado_anterior=parsePagado(this.value);render()"></label>`
-            : `<span>Anterior: <strong>${fm(pagAnt)}</strong></span>`}
-          ${descAnt>0?`<span>+ anticipo ${ant}%: <strong>${fm(descAnt)}</strong></span>`:''}
+            : `<span>Anterior: <strong>${fm(pagadoPrevio(ci))}</strong></span>`}
+          ${(!mo&&ci>0&&descAnticipoCert(S.certs[ci-1])>0)
+            ? `<span>+ anticipo ${ant}% del certif. anterior: <strong>${fm(descAnticipoCert(S.certs[ci-1]))}</strong></span>`:''}
           <label>+ recibido
             <input class="pag-mini" type="text" value="${fm(c.pago_recibido||0)}"
               title="Lo que te transfirieron al centavo por el certificado anterior. Se suma a lo que ya figuraba pagado."
@@ -1721,14 +1725,12 @@ function _normObra(o){
   // Pagos: antes se cargaba a mano el acumulado de cada certificado; ahora se carga
   // lo recibido en cada uno y el acumulado se encadena solo. Se deduce lo recibido
   // de la diferencia entre acumulados, así los números siguen dando igual que antes.
-  if(!o.pagos_v2){
+  if(!o.pagos_v3){
     o.certs.forEach((c,i)=>{
-      if(c.pago_recibido==null){
-        const sig=o.certs[i+1];
-        c.pago_recibido=sig?Math.max(0,(sig.pagado_anterior||0)-(c.pagado_anterior||0)):0;
-      }
+      c.pago_recibido = i===0 ? 0
+        : Math.max(0,(c.pagado_anterior||0)-(o.certs[i-1].pagado_anterior||0));
     });
-    o.pagos_v2=true;
+    o.pagos_v3=true;
   }
   return o;
 }
