@@ -180,7 +180,8 @@ body{font-family:var(--sans);color:var(--ink)}
 .th-mf{background:var(--mo-fh)}
 .th-tipo{font-size:9px;opacity:.75;margin-left:auto;font-weight:500}
 
-table{width:100%;border-collapse:collapse;table-layout:fixed}
+/* min-width: antes de comprimir columnas y cortar textos, el bloque se desplaza */
+table{width:100%;min-width:1260px;border-collapse:collapse;table-layout:fixed}
 th{
   background:var(--hdr);color:#fff;
   font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
@@ -208,8 +209,8 @@ tr:last-child td{border-bottom:none}
 
 /* columnas */
 /* anchos por columna — así todas las tablas coinciden entre sí */
-col.col-n{width:26px}col.col-d{width:330px}col.col-i{width:44px}col.col-ib{width:86px}
-col.col-m{width:86px}col.col-a{width:56px}col.col-p{width:68px}col.col-ck{width:42px}col.col-act{width:70px}
+col.col-n{width:26px}col.col-d{width:380px}col.col-i{width:48px}col.col-ib{width:100px}
+col.col-m{width:100px}col.col-a{width:58px}col.col-p{width:72px}col.col-ck{width:42px}col.col-act{width:70px}
 
 .c-n{width:30px}
 .c-d{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -230,12 +231,15 @@ col.col-m{width:86px}col.col-a{width:56px}col.col-p{width:68px}col.col-ck{width:
 
 /* input % presente */
 .pi{
-  width:52px;padding:3px 4px;
+  width:100%;padding:3px 4px;
+  -moz-appearance:textfield;appearance:textfield;
   border:2px solid #c0930a;border-radius:4px;
   background:var(--yel);color:var(--yel-d);
   font-family:var(--mono);font-size:12px;font-weight:700;
   text-align:right;transition:all .13s;
 }
+/* sin flechitas: se comían el ancho y cortaban el segundo decimal */
+.pi::-webkit-outer-spin-button,.pi::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .pi:focus{outline:none;border-color:#7a5200;box-shadow:0 0 0 3px rgba(255,213,0,.3)}
 .pi:disabled{background:var(--gry);border-color:#bbb;color:#9ca3af;cursor:not-allowed}
 
@@ -331,16 +335,16 @@ col.col-m{width:86px}col.col-a{width:56px}col.col-p{width:68px}col.col-ck{width:
   th{font-size:7.5px!important;padding:2px 3px!important;line-height:1.2!important}
   td{font-size:8px!important;padding:1px 3px!important;line-height:1.3!important}
   .th-strip{padding:4px 8px!important;font-size:8.5px!important}
-  .pi{font-size:8.5px!important;width:38px!important;padding:1px 2px!important}
+  .pi{font-size:8.5px!important;width:100%!important;padding:1px 2px!important}
 
   /* anchos fijos: todas las tablas quedan con las mismas columnas,
      así Obra Fina no se ensancha respecto de Obra Gruesa */
-  table{table-layout:fixed!important}
+  table{table-layout:fixed!important;min-width:0!important}
   /* en % y sumando 100: la descripción NO se queda con el sobrante */
   col.col-i,col.col-ib,col.col-ck,col.col-act{width:0!important}
   col.col-n{width:2.5%!important}
-  col.col-d{width:33%!important}
-  col.col-m{width:11.5%!important}
+  col.col-d{width:34%!important}
+  col.col-m{width:11.25%!important}
   col.col-a{width:6%!important}
   col.col-p{width:6.5%!important}
   /* ocultar en PDF: Desl., botón ×, I.Base$, Incid., Mto.ant., %ant. */
