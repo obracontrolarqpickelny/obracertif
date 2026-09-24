@@ -739,7 +739,7 @@ function makeCert(id,prev){
 
 // ── HELPERS ──────────────────────────────────────────────
 const fm = n=>n==null?'—':'$ '+n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const fp = p=>(p*100).toFixed(1)+'%';
+const fp = p=>(p*100).toFixed(2)+'%';
 // Parsea un valor ingresado como texto (formato argentino o número crudo) → número
 function parsePagado(s){
   s=(s||'').trim().replace(/^\$\s*/,''); // quitar $ y espacios
@@ -1035,7 +1035,7 @@ function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct,pagTotal){
   return`<div class="resumen">
     <div class="rc tenue">
       <div class="rc-lbl">% Físico acumulado</div>
-      <div class="rc-val">${(pctFisico*100).toFixed(1)}%</div>
+      <div class="rc-val">${(pctFisico*100).toFixed(2)}%</div>
     </div>
     <div class="rc tenue">
       <div class="rc-lbl">Monto acumulado realizado</div>
@@ -1072,7 +1072,7 @@ function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct,pagTotal){
       <div class="rc-lbl">Monto a pagar — presente certificado</div>
       <div class="rc-val">${fm(neto)}</div>
       ${ant>0?`<div class="rc-ant">Certificado ${fm(bruto)} − anticipo ${ant}% de ${fm(t.pres)}: <strong>${fm(descAnt)}</strong></div>`:''}
-      <div class="rc-pct">Avance de este certificado: <strong>${(pctPres*100).toFixed(1)}%</strong></div>
+      <div class="rc-pct">Avance de este certificado: <strong>${(pctPres*100).toFixed(2)}%</strong></div>
     </div>
   </div>`;
 }
@@ -1153,7 +1153,7 @@ function buildTable(c,ci,tipo,rubro){
         <input class="pi" type="number" value="0" disabled style="width:44px">
         ${revertBtn}
       </span>
-      <span class="yes-print" style="display:none;text-align:center;font-weight:700">${hasPres?'100.0%':'—'}</span>`;
+      <span class="yes-print" style="display:none;text-align:center;font-weight:700">${hasPres?'100.00%':'—'}</span>`;
     } else if(isMO && !it.desl_mo){
       piHtml=`<input class="pi" type="number" value="${Math.round(it.pct_pres*100)}" disabled
         style="background:#e8f4e8;border-color:#4a8a4a;color:#1a4a1a"
