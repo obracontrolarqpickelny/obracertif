@@ -188,6 +188,13 @@ th{
   padding:5px 6px;text-align:right;white-space:nowrap;overflow:hidden;
 }
 th.l{text-align:left}
+/* columnas cuyo valor va dentro de un campo: el título compensa el padding del
+   campo, si no queda corrido respecto de los números */
+th.c-ib{text-align:right;padding-right:11px}
+th.c-p,th.c-a,th.c-n{text-align:center}
+/* los valores llevan 5px de margen interno propio: el título lo compensa */
+th.c-m{text-align:right;padding-right:11px}
+th.c-d{padding-left:11px}
 td{padding:3px 6px;font-size:11px;border-bottom:1px solid #e8eaee;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 
@@ -209,8 +216,8 @@ tr:last-child td{border-bottom:none}
 
 /* columnas */
 /* anchos por columna — así todas las tablas coinciden entre sí */
-col.col-n{width:26px}col.col-d{width:380px}col.col-i{width:48px}col.col-ib{width:100px}
-col.col-m{width:100px}col.col-a{width:58px}col.col-p{width:72px}col.col-ck{width:42px}col.col-act{width:70px}
+col.col-n{width:26px}col.col-d{width:370px}col.col-i{width:48px}col.col-ib{width:110px}
+col.col-m{width:110px}col.col-a{width:58px}col.col-p{width:69px}col.col-ck{width:42px}col.col-act{width:70px}
 
 .c-n{width:30px}
 .c-d{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -231,7 +238,7 @@ col.col-m{width:100px}col.col-a{width:58px}col.col-p{width:72px}col.col-ck{width
 
 /* input % presente */
 .pi{
-  width:100%;padding:3px 4px;
+  width:57px;padding:3px 4px;
   -moz-appearance:textfield;appearance:textfield;
   border:2px solid #c0930a;border-radius:4px;
   background:var(--yel);color:var(--yel-d);
@@ -252,7 +259,7 @@ col.col-m{width:100px}col.col-a{width:58px}col.col-p{width:72px}col.col-ck{width
 /* ACUMULADO: verde — total construido hasta la fecha */
 .ba{display:inline-block;padding:2px 6px;border-radius:10px;font-family:var(--mono);font-size:9.5px;font-weight:700;background:var(--grn);color:var(--grn-d)}
 .bd{background:#1a6640;color:#fff}
-.va{font-family:var(--mono);font-size:10px;text-align:right;color:#888}
+.va{font-family:var(--mono);font-size:10px;text-align:right;color:#888;padding:2px 5px}
 .vm{display:block;text-align:right;font-family:var(--mono);font-size:10px;font-weight:700;background:var(--grn);color:var(--grn-d);border-radius:3px;padding:2px 5px}
 
 /* totals row */
@@ -333,6 +340,9 @@ col.col-m{width:100px}col.col-a{width:58px}col.col-p{width:72px}col.col-ck{width
 
   /* tablas — filas compactas, sin solapamiento */
   th{font-size:7.5px!important;padding:2px 3px!important;line-height:1.2!important}
+  th.c-m{padding-right:8px!important}
+  th.c-d{padding-left:7px!important}
+  th.c-ib{padding-right:3px!important}
   td{font-size:8px!important;padding:1px 3px!important;line-height:1.3!important}
   .th-strip{padding:4px 8px!important;font-size:8.5px!important}
   .pi{font-size:8.5px!important;width:100%!important;padding:1px 2px!important}
@@ -361,9 +371,9 @@ col.col-m{width:100px}col.col-a{width:58px}col.col-p{width:72px}col.col-ck{width
   /* descripción: 1 línea, ancho mínimo garantizado */
   .c-d,.c-d input{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important;max-width:none!important;width:100%!important}
   /* columnas numéricas compactas */
-  .c-m{width:74px!important;min-width:70px!important}
-  .c-a{width:40px!important;min-width:36px!important}
-  .c-p{width:50px!important;min-width:44px!important}
+  .c-m{width:80px!important;min-width:76px!important}
+  .c-a{width:44px!important;min-width:40px!important}
+  .c-p{width:48px!important;min-width:44px!important}
   .c-n{width:20px!important}
   /* act-log visible en PDF */
   .act-log.vis{
@@ -1227,14 +1237,14 @@ function buildTable(c,ci,tipo,rubro){
         <col class="col-act">
       </colgroup>
       <thead><tr>
-        <th class="l">Nº</th><th class="l">Descripción</th>
-        <th class="no-print-col">Incid.</th>
-        <th class="no-print-col" title="Precio original del contrato">I. Base $</th>
-        <th title="Precio vigente tras actualizaciones">I. Vigente $</th>
-        <th>Mto. ant. $</th><th>% ant.</th>
+        <th class="c-n">Nº</th><th class="c-d l">Descripción</th>
+        <th class="c-i no-print-col">Incid.</th>
+        <th class="c-ib no-print-col" title="Precio original del contrato">I. Base $</th>
+        <th class="c-m" title="Precio vigente tras actualizaciones">I. Vigente $</th>
+        <th class="c-m">Mto. ant. $</th><th class="c-a">% ant.</th>
         ${isMO?`<th class="c-ck no-print-col" title="Desligar % MO">Desl.</th>`:''}
-        <th>★ % pres.</th><th>Mto. pres. $</th>
-        <th>% acum.</th><th>Mto. acum. $</th>
+        <th class="c-p">★ % pres.</th><th class="c-m c-mp">Mto. pres. $</th>
+        <th class="c-a">% acum.</th><th class="c-m c-mp">Mto. acum. $</th>
         <th class="no-print"></th>
       </tr></thead>
       <tbody>
