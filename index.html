@@ -826,7 +826,7 @@ function fmtDateInput(el){
 }
 
 // ── RENDER ───────────────────────────────────────────────
-function render(){ renderTabs(); renderPg(); persist(); }
+function render(){ const foco=_focoActual(); renderTabs(); renderPg(); persist(); _restaurarFoco(foco); }
 
 function renderTabs(){
   document.getElementById('tabsBar').innerHTML=S.certs.map((c,i)=>`
@@ -847,13 +847,64 @@ function renderPg(){
     pg.appendChild(d);
   });
 }
+// ── EL CURSOR SOBREVIVE AL REDIBUJO ───────────────────────
+// Al cargar un dato se vuelve a dibujar el certificado y se perdía el foco: el
+// Tab siguiente arrancaba de nuevo en Propietario. Se guarda qué casilla estaba
+// activa (data-k) y, si se salió con Tab, se pasa a la casilla siguiente.
+let _ultTecla = '';
+document.addEventListener('keydown', e=>{ _ultTecla = e.key; }, true);
+document.addEventListener('mousedown', ()=>{ _ultTecla = ''; }, true);
+
+let _tabAtras = false;
+const _campos = () => [...document.querySelectorAll('.cert-panel.active input:not([disabled]):not([type=hidden])')];
+function _moverFoco(desde, atras){
+  const c = _campos(), i = c.indexOf(desde);
+  const sig = c[i + (atras ? -1 : 1)];
+  if(sig){ sig.focus(); try{ sig.select(); }catch(_){} }
+}
+function _focoActual(){
+  const a = document.activeElement;
+  if(!a || !a.dataset || !a.dataset.k) return null;
+  let s=null, e=null;
+  try{ s=a.selectionStart; e=a.selectionEnd; }catch(_){}
+  return {k:a.dataset.k, s, e, tab:_ultTecla==='Tab', atras:_tabAtras};
+}
+function _restaurarFoco(f){
+  if(!f) return;
+  const el = document.querySelector(`[data-k="${CSS.escape(f.k)}"]`);
+  if(!el) return;
+  if(f.tab){ _moverFoco(el, f.atras); return; }
+  el.focus();
+  try{ if(f.s!=null) el.setSelectionRange(f.s, f.e); }catch(_){}
+}
+
+// El Tab lo maneja la app: si lo dejara al navegador, el redibujo que provoca
+// el cambio de valor le haría perder el rumbo y saltar al principio.
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Tab') return;
+  const el = e.target;
+  if(!el || !el.dataset || !el.dataset.k || !el.closest || !el.closest('.cert-panel.active')) return;
+  e.preventDefault();
+  _ultTecla = 'Tab'; _tabAtras = e.shiftKey;
+  const clave = el.dataset.k;
+  el.blur();                                   // si cambió el valor: change → patch → foco al siguiente
+  const act = document.activeElement;
+  if(!act || !act.dataset || !act.dataset.k){  // no hubo redibujo: se mueve a mano
+    const actual = document.querySelector(`[data-k="${CSS.escape(clave)}"]`);
+    if(actual) _moverFoco(actual, e.shiftKey);
+  }
+  _ultTecla = ''; _tabAtras = false;
+});
+
 function patch(ci){
   const c=S.certs[ci],old=document.getElementById(`p${ci}`);
   if(!old)return;
+  const foco=_focoActual();
   const nd=document.createElement('div');
   nd.className=old.className;nd.id=old.id;
   nd.innerHTML=buildCert(c,ci);
   old.replaceWith(nd);persist();
+  _restaurarFoco(foco);
 }
 
 // ── PAGOS ────────────────────────────────────────────────
@@ -976,7 +1027,8 @@ function buildObraBar(c,ci){
     <div class="fld" style="min-width:${w}px">
       <span class="fld-lbl">${lbl}</span>
       <input class="fi ed" type="text" value="${fmtDate(val)||''}" placeholder="dd/mm/aaaa"
-        maxlength="10" oninput="fmtDateInput(this)"
+        maxlength="10" oninput="fmtDateInput(this)" data-k="ob-${lbl}"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="${onch}">
     </div>`;
   const roInput=(lbl,val,w)=>`
@@ -987,7 +1039,8 @@ function buildObraBar(c,ci){
   const edInput=(lbl,val,onch,w,ph)=>`
     <div class="fld" style="min-width:${w}px">
       <span class="fld-lbl">${lbl} ★</span>
-      <input class="fi ed" value="${val}" onchange="${onch}" placeholder="${ph||''}">
+      <input class="fi ed" value="${val}" onchange="${onch}" placeholder="${ph||''}" data-k="ob-${lbl}"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
     </div>`;
 
   return `<div class="obra-bar">
@@ -1082,8 +1135,9 @@ function buildResumen(c,ci,t,pagAnt,aPagar,tipo,antPct,pagTotal){
             : `<span>Total al certif. anterior: <strong>${fm(previo)}</strong></span>`}
           ${descPrev>0?`<span>+ anticipo ${ant}% del certif. anterior: <strong>${fm(descPrev)}</strong></span>`:''}
           <label>Pagado en el certif. anterior
-            <input class="pag-mini" type="text" value="${fm(c[campoPago]||0)}"
+            <input class="pag-mini" type="text" value="${fm(c[campoPago]||0)}" data-k="pago-${tipo}-${ci}"
               title="${mo?'Lo que le pagaste al centavo a la mano de obra por el certificado anterior.':'Lo que te transfirieron al centavo por el certificado anterior.'} Se suma al total."
+              onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
               onfocus="this.value=(S.certs[${ci}].${campoPago}||0).toFixed(2);this.select()"
               onblur="S.certs[${ci}].${campoPago}=parsePagado(this.value);render()"></label>
         </div>`;})()}
@@ -1152,7 +1206,9 @@ function buildTable(c,ci,tipo,rubro){
           title="Importe base original: ${fm(ib)}&#10;Bloqueado: se aplicaron actualizaciones de precio"
           onclick="alert('El importe base ya no es editable.\\nSe han aplicado actualizaciones de precio.')">`
       :`<input class="imp-inp" type="number" min="0" step="0.01"
-          value="${ib.toFixed(2)}"
+          value="${ib.toFixed(2)}" data-k="ib-${tipo}-${it.n}"
+          onfocus="this.select()"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
           onchange="setImporteBase('${tipo}',${ci},${it.n},this.value)"
           title="Importe base del contrato (editable hasta la 1ª actualización)">`;
 
@@ -1180,7 +1236,9 @@ function buildTable(c,ci,tipo,rubro){
         title="Sincronizado con planilla cliente">`;
     } else {
       piHtml=`<input class="pi" type="number" min="0" max="100" step="0.01"
-        value="${(it.pct_pres*100).toFixed(2)}"
+        value="${(it.pct_pres*100).toFixed(2)}" data-k="pi-${tipo}-${it.n}"
+        onfocus="this.select()"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="setPct('${tipo}',${ci},${it.n},this.value)">`;
     }
 
@@ -1196,6 +1254,8 @@ function buildTable(c,ci,tipo,rubro){
     return`<tr class="${cls}">
       <td class="c-n">${it.n}</td>
       <td class="c-d"><input class="desc-inp" type="text" value="${it.desc.replace(/"/g,'&quot;')}"
+        data-k="d-${tipo}-${it.n}"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
         onchange="setDesc(${it.n},this.value)" title="Editar descripción"></td>
       <td class="c-i no-print-col" title="Incidencia calculada: ${fm(it.importe_actual)} sobre ${fm(totVig)} del total">${(totVig>0?it.importe_actual/totVig*100:0).toFixed(2)}%</td>
       <td class="c-ib no-print-col">${impBaseHtml}</td>
