@@ -467,6 +467,8 @@ col.col-m{width:110px}col.col-a{width:58px}col.col-p{width:69px}col.col-ck{width
 
   .cert-panel{display:none!important}
   .cert-panel.active{display:block!important}
+  /* achique fino para que no se vaya una sola fila a la hoja siguiente */
+  .pg,.print-footer{zoom:var(--pdf-zoom,1)}
   /* permitir saltos de página dentro de las tablas */
   .tblock{break-inside:auto!important;margin-bottom:4px}
   tr{break-inside:avoid!important}
@@ -1663,18 +1665,60 @@ function doAddRubro(){
 }
 
 // ── PDF ────────────────────────────────────────────────────
-function pdfCliente(){
-  document.body.classList.remove('pdf-mo');
-  document.body.classList.add('pdf-cliente');
-  showPrintTip();
-  setTimeout(()=>{window.print();document.body.classList.remove('pdf-cliente');hidePrintTip();},200);
+// ── AJUSTE A UNA HOJA ─────────────────────────────────────
+// Si al certificado le falta poco para entrar en una sola hoja (se va sólo el
+// zócalo de totales o un par de filas), se achica todo un pelito y entra. Si lo
+// que sobra es más que eso, se deja en dos hojas: forzarlo sería ilegible.
+const MM_PX = 3.7795;                       // px por mm a 96 dpi
+const HOJA_ALTO = 205 * MM_PX;              // A4 apaisado menos los márgenes de @page
+const HOJA_ANCHO = 277 * MM_PX;
+const ZOOM_MIN = 0.90;                      // hasta 10 % de achique; más, no vale la pena
+
+function reglasDeImpresion(){
+  const out = [];
+  for(const hoja of document.styleSheets){
+    let rs; try{ rs = hoja.cssRules; }catch(e){ continue; }
+    for(const r of rs) if(r.media && String(r.media).includes('print'))
+      for(const s of r.cssRules) out.push(s.cssText);
+  }
+  return out.join('\n');
 }
-function pdfMO(){
-  document.body.classList.remove('pdf-cliente');
-  document.body.classList.add('pdf-mo');
-  showPrintTip();
-  setTimeout(()=>{window.print();document.body.classList.remove('pdf-mo');hidePrintTip();},200);
+
+function ajustarEscalaPDF(){
+  const raiz = document.documentElement;
+  raiz.style.setProperty('--pdf-zoom', 1);
+  const panel = document.querySelector('.cert-panel.active');
+  if(!panel) return 1;
+  // Se miden las alturas como van a salir impresas: mismas reglas y ancho de hoja
+  const st = document.createElement('style');
+  st.textContent = reglasDeImpresion()
+    + `\n.pg{width:${HOJA_ANCHO}px!important;max-width:none!important}`;
+  document.head.appendChild(st);
+  const pie = document.getElementById('printFooter');
+  const alto = panel.getBoundingClientRect().height + (pie ? pie.getBoundingClientRect().height : 0);
+  st.remove();
+  if(!(alto > HOJA_ALTO)) return 1;         // ya entra en una hoja
+  const esc = HOJA_ALTO / alto;
+  if(esc < ZOOM_MIN) return 1;              // sobra demasiado: se deja en dos hojas
+  const z = Math.floor(esc * 1000) / 1000;
+  raiz.style.setProperty('--pdf-zoom', z);
+  return z;
 }
+
+function imprimirCertif(modo){
+  document.body.classList.remove('pdf-cliente','pdf-mo');
+  document.body.classList.add(modo);
+  showPrintTip();
+  setTimeout(()=>{
+    ajustarEscalaPDF();
+    window.print();
+    document.body.classList.remove(modo);
+    document.documentElement.style.setProperty('--pdf-zoom', 1);
+    hidePrintTip();
+  }, 200);
+}
+function pdfCliente(){ imprimirCertif('pdf-cliente'); }
+function pdfMO(){ imprimirCertif('pdf-mo'); }
 function showPrintTip(){
   let t=document.getElementById('printTip');
   if(!t){
