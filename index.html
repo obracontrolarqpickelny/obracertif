@@ -1760,6 +1760,7 @@ const HOJA_ALTO = 205 * MM_PX;              // A4 apaisado menos los márgenes d
 const HOJA_ANCHO = 277 * MM_PX;
 const ZOOM_MIN = 0.90;                      // hasta 10 % de achique; más, no vale la pena
 
+let _ultModoPDF = 'normal';
 function reglasDeImpresion(){
   const out = [];
   for(const hoja of document.styleSheets){
@@ -1786,13 +1787,11 @@ function ajustarEscalaPDF(){
   const pie = document.getElementById('printFooter');
   const alto = () => panel.getBoundingClientRect().height + (pie ? pie.getBoundingClientRect().height : 0);
   // Margen de seguridad: lo impreso ocupa un poco más que lo medido
-  const TOPE = HOJA_ALTO * 0.97;
-  // Sólo se achica si lo que se va a la otra hoja es poco: una fila de ítem más
-  // el renglón de totales. Si se van dos ítems o más, van las dos hojas.
-  const SOBRA_MAX = 60;                     // ≈ 1 ítem + totales (la fila mide ~21 px)
-  const sobra = alto() - HOJA_ALTO;         // lo que se pasa de la hoja real
+  const TOPE = HOJA_ALTO * 0.96;
+  // Si no entra, se prueba achicar. Sin condiciones: mientras el achique alcance,
+  // sale en una hoja. Si ni el más compacto alcanza, van las dos hojas.
   let modo = 'normal';
-  if(sobra > 0 && sobra <= SOBRA_MAX){
+  if(alto() > TOPE){
     cuerpo.classList.add('pdf-chico');
     modo = 'compacto';
     if(alto() > TOPE){
@@ -1803,7 +1802,8 @@ function ajustarEscalaPDF(){
         modo = 'normal (dos hojas)';
       }
     }
-  } else if(sobra > 0) modo = 'normal (dos hojas)';
+  }
+  _ultModoPDF = modo;
   st.remove();
   return modo;
 }
@@ -1813,7 +1813,11 @@ function imprimirCertif(modo){
   document.body.classList.add(modo);
   showPrintTip();
   setTimeout(()=>{
-    ajustarEscalaPDF();
+    const m = ajustarEscalaPDF();
+    if(m !== 'normal'){
+      const t = document.getElementById('printTip');
+      if(t) t.innerHTML = `📄 Ajustado en modo <strong>${m}</strong> para que entre en una sola hoja. ` + t.innerHTML;
+    }
     window.print();
     document.body.classList.remove(modo, 'pdf-chico', 'pdf-chico2');
     hidePrintTip();
