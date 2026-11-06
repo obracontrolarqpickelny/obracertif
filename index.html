@@ -467,8 +467,34 @@ col.col-m{width:110px}col.col-a{width:58px}col.col-p{width:69px}col.col-ck{width
 
   .cert-panel{display:none!important}
   .cert-panel.active{display:block!important}
-  /* achique fino para que no se vaya una sola fila a la hoja siguiente */
-  .pg,.print-footer{zoom:var(--pdf-zoom,1)}
+
+  /* Modo compacto: se activa solo cuando al certificado le falta poco para
+     entrar en una hoja. Achica filas, encabezado, resumen y pie. */
+  body.pdf-chico td{font-size:7.4px!important;padding:0 3px!important;line-height:1.2!important}
+  body.pdf-chico th{font-size:7px!important;padding:1px 3px!important}
+  body.pdf-chico .th-strip{padding:2px 8px!important;font-size:8px!important}
+  body.pdf-chico .print-header{padding-top:3mm!important;margin-bottom:4px!important;padding-bottom:3px!important}
+  body.pdf-chico .ph-title{font-size:11.5px!important}
+  body.pdf-chico .rc{padding:4px 8px!important}
+  body.pdf-chico .rc-val{font-size:11.5px!important}
+  body.pdf-chico .rc-lbl{font-size:7px!important}
+  body.pdf-chico .print-footer{padding-top:4px!important;margin-top:8px!important}
+  body.pdf-chico .pi{font-size:7.5px!important;padding:0 2px!important}
+  body.pdf-chico .tblock{margin-bottom:2px!important}
+
+  body.pdf-chico2 td{font-size:6.8px!important;padding:0 2px!important;line-height:1.1!important}
+  body.pdf-chico2 th{font-size:6.5px!important;padding:0 2px!important;line-height:1.1!important}
+  body.pdf-chico2 .th-strip{padding:1px 6px!important;font-size:7.2px!important}
+  body.pdf-chico2 .print-header{padding-top:2mm!important;margin-bottom:3px!important;padding-bottom:2px!important}
+  body.pdf-chico2 .ph-title{font-size:10.5px!important}
+  body.pdf-chico2 .ph-sub{font-size:7.5px!important}
+  body.pdf-chico2 .rc{padding:3px 7px!important}
+  body.pdf-chico2 .rc-val{font-size:10.5px!important}
+  body.pdf-chico2 .rc-lbl{font-size:6.5px!important}
+  body.pdf-chico2 .print-footer{padding-top:3px!important;margin-top:6px!important}
+  body.pdf-chico2 .pi{font-size:7px!important;padding:0 2px!important}
+  body.pdf-chico2 .tblock{margin-bottom:1px!important}
+  body.pdf-chico2 .act-log.vis{padding:2px 8px!important;font-size:7.5px!important}
   /* permitir saltos de página dentro de las tablas */
   .tblock{break-inside:auto!important;margin-bottom:4px}
   tr{break-inside:avoid!important}
@@ -1744,25 +1770,42 @@ function reglasDeImpresion(){
   return out.join('\n');
 }
 
+// Prueba los modos compactos y se queda con el primero que haga entrar todo en
+// una hoja. Si ni el más compacto alcanza (sobran dos filas o más), se deja en
+// dos hojas: apretarlo más lo volvería ilegible.
 function ajustarEscalaPDF(){
-  const raiz = document.documentElement;
-  raiz.style.setProperty('--pdf-zoom', 1);
+  const cuerpo = document.body;
+  cuerpo.classList.remove('pdf-chico','pdf-chico2');
   const panel = document.querySelector('.cert-panel.active');
-  if(!panel) return 1;
-  // Se miden las alturas como van a salir impresas: mismas reglas y ancho de hoja
+  if(!panel) return 'normal';
+  // Se mide como va a salir impreso: mismas reglas y ancho real de la hoja
   const st = document.createElement('style');
   st.textContent = reglasDeImpresion()
     + `\n.pg{width:${HOJA_ANCHO}px!important;max-width:none!important}`;
   document.head.appendChild(st);
   const pie = document.getElementById('printFooter');
-  const alto = panel.getBoundingClientRect().height + (pie ? pie.getBoundingClientRect().height : 0);
+  const alto = () => panel.getBoundingClientRect().height + (pie ? pie.getBoundingClientRect().height : 0);
+  // Margen de seguridad: lo impreso ocupa un poco más que lo medido
+  const TOPE = HOJA_ALTO * 0.97;
+  // Sólo se achica si lo que se va a la otra hoja es poco: una fila de ítem más
+  // el renglón de totales. Si se van dos ítems o más, van las dos hojas.
+  const SOBRA_MAX = 60;                     // ≈ 1 ítem + totales (la fila mide ~21 px)
+  const sobra = alto() - HOJA_ALTO;         // lo que se pasa de la hoja real
+  let modo = 'normal';
+  if(sobra > 0 && sobra <= SOBRA_MAX){
+    cuerpo.classList.add('pdf-chico');
+    modo = 'compacto';
+    if(alto() > TOPE){
+      cuerpo.classList.add('pdf-chico2');
+      modo = 'muy compacto';
+      if(alto() > TOPE){                    // no entra ni así: dos hojas
+        cuerpo.classList.remove('pdf-chico','pdf-chico2');
+        modo = 'normal (dos hojas)';
+      }
+    }
+  } else if(sobra > 0) modo = 'normal (dos hojas)';
   st.remove();
-  if(!(alto > HOJA_ALTO)) return 1;         // ya entra en una hoja
-  const esc = HOJA_ALTO / alto;
-  if(esc < ZOOM_MIN) return 1;              // sobra demasiado: se deja en dos hojas
-  const z = Math.floor(esc * 1000) / 1000;
-  raiz.style.setProperty('--pdf-zoom', z);
-  return z;
+  return modo;
 }
 
 function imprimirCertif(modo){
@@ -1772,8 +1815,7 @@ function imprimirCertif(modo){
   setTimeout(()=>{
     ajustarEscalaPDF();
     window.print();
-    document.body.classList.remove(modo);
-    document.documentElement.style.setProperty('--pdf-zoom', 1);
+    document.body.classList.remove(modo, 'pdf-chico', 'pdf-chico2');
     hidePrintTip();
   }, 200);
 }
