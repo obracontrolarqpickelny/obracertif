@@ -482,19 +482,24 @@ col.col-m{width:110px}col.col-a{width:58px}col.col-p{width:69px}col.col-ck{width
   body.pdf-chico .pi{font-size:7.5px!important;padding:0 2px!important}
   body.pdf-chico .tblock{margin-bottom:2px!important}
 
-  body.pdf-chico2 td{font-size:6.8px!important;padding:0 2px!important;line-height:1.1!important}
-  body.pdf-chico2 th{font-size:6.5px!important;padding:0 2px!important;line-height:1.1!important}
-  body.pdf-chico2 .th-strip{padding:1px 6px!important;font-size:7.2px!important}
-  body.pdf-chico2 .print-header{padding-top:2mm!important;margin-bottom:3px!important;padding-bottom:2px!important}
-  body.pdf-chico2 .ph-title{font-size:10.5px!important}
-  body.pdf-chico2 .ph-sub{font-size:7.5px!important}
-  body.pdf-chico2 .rc{padding:3px 7px!important}
-  body.pdf-chico2 .rc-val{font-size:10.5px!important}
-  body.pdf-chico2 .rc-lbl{font-size:6.5px!important}
-  body.pdf-chico2 .print-footer{padding-top:3px!important;margin-top:6px!important}
-  body.pdf-chico2 .pi{font-size:7px!important;padding:0 2px!important}
+  body.pdf-chico2 td{font-size:6.2px!important;padding:0 2px!important;line-height:1!important}
+  body.pdf-chico2 th{font-size:6px!important;padding:0 2px!important;line-height:1!important}
+  body.pdf-chico2 .th-strip{padding:0 6px!important;font-size:6.5px!important}
+  body.pdf-chico2 .print-header{padding-top:1mm!important;margin-bottom:2px!important;padding-bottom:1px!important}
+  body.pdf-chico2 .ph-title{font-size:9.5px!important}
+  body.pdf-chico2 .ph-sub{font-size:6.5px!important}
+  body.pdf-chico2 .ph-badge{font-size:8px!important;padding:1px 6px!important}
+  body.pdf-chico2 .resumen{gap:4px!important;margin-bottom:4px!important}
+  body.pdf-chico2 .rc{padding:2px 6px!important}
+  body.pdf-chico2 .rc-val{font-size:9px!important}
+  body.pdf-chico2 .rc-lbl{font-size:6px!important;margin-bottom:1px!important}
+  body.pdf-chico2 .rc-pct,body.pdf-chico2 .rc-ant{font-size:6px!important;margin-top:2px!important;padding-top:2px!important}
+  body.pdf-chico2 .print-footer{padding-top:2px!important;margin-top:4px!important}
+  body.pdf-chico2 .pf-name{font-size:10px!important}
+  body.pdf-chico2 .pf-left,body.pdf-chico2 .pf-right{font-size:7px!important;line-height:1.3!important}
+  body.pdf-chico2 .pi{font-size:6.5px!important;padding:0 1px!important}
   body.pdf-chico2 .tblock{margin-bottom:1px!important}
-  body.pdf-chico2 .act-log.vis{padding:2px 8px!important;font-size:7.5px!important}
+  body.pdf-chico2 .act-log.vis{padding:1px 6px!important;font-size:6.5px!important}
   /* permitir saltos de página dentro de las tablas */
   .tblock{break-inside:auto!important;margin-bottom:4px}
   tr{break-inside:avoid!important}
@@ -1787,7 +1792,7 @@ function ajustarEscalaPDF(){
   const pie = document.getElementById('printFooter');
   const alto = () => panel.getBoundingClientRect().height + (pie ? pie.getBoundingClientRect().height : 0);
   // Margen de seguridad: lo impreso ocupa un poco más que lo medido
-  const TOPE = HOJA_ALTO * 0.96;
+  const TOPE = HOJA_ALTO * 0.99;
   // Si no entra, se prueba achicar. Sin condiciones: mientras el achique alcance,
   // sale en una hoja. Si ni el más compacto alcanza, van las dos hojas.
   let modo = 'normal';
@@ -1814,10 +1819,10 @@ function imprimirCertif(modo){
   showPrintTip();
   setTimeout(()=>{
     const m = ajustarEscalaPDF();
-    if(m !== 'normal'){
-      const t = document.getElementById('printTip');
-      if(t) t.innerHTML = `📄 Ajustado en modo <strong>${m}</strong> para que entre en una sola hoja. ` + t.innerHTML;
-    }
+    const t = document.getElementById('printTip');
+    if(t && m === 'compacto')      t.innerHTML = '📄 Achicado un poco para que entre en una sola hoja. ' + t.innerHTML;
+    if(t && m === 'muy compacto')  t.innerHTML = '📄 Achicado al máximo para que entre en una sola hoja. ' + t.innerHTML;
+    if(t && m.startsWith('normal (')) t.innerHTML = '📄 Son demasiadas filas para una hoja: sale en dos. ' + t.innerHTML;
     window.print();
     document.body.classList.remove(modo, 'pdf-chico', 'pdf-chico2');
     hidePrintTip();
