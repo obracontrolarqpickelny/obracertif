@@ -1792,7 +1792,10 @@ function ajustarEscalaPDF(){
   const pie = document.getElementById('printFooter');
   const alto = () => panel.getBoundingClientRect().height + (pie ? pie.getBoundingClientRect().height : 0);
   // Margen de seguridad: lo impreso ocupa un poco más que lo medido
-  const TOPE = HOJA_ALTO * 0.99;
+  // Calibrado con un certificado real: medido 801 px imprimio dejando aun
+  // ~25 % de hoja libre, o sea que lo impreso ocupa cerca de un 75 % de lo que
+  // mide acá. Por eso el presupuesto en px medidos es mayor que la hoja.
+  const TOPE = 930;
   const natural = alto();
   let modo = 'normal';
   if(natural > TOPE){
@@ -1838,8 +1841,10 @@ function imprimirCertif(modo){
 }
 function pdfCliente(){ imprimirCertif('pdf-cliente'); }
 function pdfMO(){ imprimirCertif('pdf-mo'); }
+const TIP_BASE = '💡 Chrome agrega automáticamente su propia fecha/hora y ruta del archivo. Para quitarlos, desmarcar <strong>«Encabezados y pies de página»</strong> en el diálogo. El encabezado y pie del certificado (<em>propietario, firma</em>) son parte del documento y siempre aparecen.';
 function showPrintTip(){
   let t=document.getElementById('printTip');
+  if(t) t.innerHTML = TIP_BASE;
   if(!t){
     t=document.createElement('div');t.id='printTip';
     t.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:9999;background:#1e293b;color:#fff;padding:8px 18px;border-radius:8px;font-size:12px;font-family:sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap;';
