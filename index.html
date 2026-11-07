@@ -1765,7 +1765,7 @@ const HOJA_ALTO = 205 * MM_PX;              // A4 apaisado menos los márgenes d
 const HOJA_ANCHO = 277 * MM_PX;
 const ZOOM_MIN = 0.90;                      // hasta 10 % de achique; más, no vale la pena
 
-let _ultModoPDF = 'normal';
+let _ultModoPDF = 'normal', _medidaPDF = null;
 function reglasDeImpresion(){
   const out = [];
   for(const hoja of document.styleSheets){
@@ -1793,21 +1793,28 @@ function ajustarEscalaPDF(){
   const alto = () => panel.getBoundingClientRect().height + (pie ? pie.getBoundingClientRect().height : 0);
   // Margen de seguridad: lo impreso ocupa un poco más que lo medido
   const TOPE = HOJA_ALTO * 0.99;
-  // Si no entra, se prueba achicar. Sin condiciones: mientras el achique alcance,
-  // sale en una hoja. Si ni el más compacto alcanza, van las dos hojas.
+  const natural = alto();
   let modo = 'normal';
-  if(alto() > TOPE){
+  if(natural > TOPE){
     cuerpo.classList.add('pdf-chico');
-    modo = 'compacto';
-    if(alto() > TOPE){
+    const conChico = alto();
+    if(conChico <= TOPE) modo = 'compacto';
+    else {
       cuerpo.classList.add('pdf-chico2');
-      modo = 'muy compacto';
-      if(alto() > TOPE){                    // no entra ni así: dos hojas
+      const conChico2 = alto();
+      if(conChico2 <= TOPE) modo = 'muy compacto';
+      else if(natural <= HOJA_ALTO * 1.6){
+        // La medición suele dar más alta que lo que después ocupa impreso: si
+        // el certificado está en el orden de una hoja, se achica igual al
+        // máximo. Peor es partirlo por un renglón.
+        modo = 'muy compacto';
+      } else {
         cuerpo.classList.remove('pdf-chico','pdf-chico2');
         modo = 'normal (dos hojas)';
       }
     }
-  }
+    _medidaPDF = {natural:Math.round(natural), final:Math.round(alto()), hoja:Math.round(HOJA_ALTO)};
+  } else _medidaPDF = {natural:Math.round(natural), final:Math.round(natural), hoja:Math.round(HOJA_ALTO)};
   _ultModoPDF = modo;
   st.remove();
   return modo;
@@ -1820,9 +1827,10 @@ function imprimirCertif(modo){
   setTimeout(()=>{
     const m = ajustarEscalaPDF();
     const t = document.getElementById('printTip');
-    if(t && m === 'compacto')      t.innerHTML = '📄 Achicado un poco para que entre en una sola hoja. ' + t.innerHTML;
-    if(t && m === 'muy compacto')  t.innerHTML = '📄 Achicado al máximo para que entre en una sola hoja. ' + t.innerHTML;
-    if(t && m.startsWith('normal (')) t.innerHTML = '📄 Son demasiadas filas para una hoja: sale en dos. ' + t.innerHTML;
+    const med = _medidaPDF ? ` <span style="opacity:.7">(alto ${_medidaPDF.natural} → ${_medidaPDF.final} · hoja ${_medidaPDF.hoja})</span>` : '';
+    if(t && m === 'compacto')      t.innerHTML = '📄 Achicado un poco para que entre en una sola hoja.' + med + ' ' + t.innerHTML;
+    if(t && m === 'muy compacto')  t.innerHTML = '📄 Achicado al máximo para que entre en una sola hoja.' + med + ' ' + t.innerHTML;
+    if(t && m.startsWith('normal (')) t.innerHTML = '📄 Son demasiadas filas para una hoja: sale en dos.' + med + ' ' + t.innerHTML;
     window.print();
     document.body.classList.remove(modo, 'pdf-chico', 'pdf-chico2');
     hidePrintTip();
